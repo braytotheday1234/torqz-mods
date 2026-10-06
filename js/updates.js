@@ -6,6 +6,7 @@ export const UPDATES = Object.freeze(
       id: entry.id || project.id + "-update-" + index,
       date: entry.date || "",
       displayDate: entry.displayDate || entry.date || "",
+      category: entry.category || null,
       title: entry.title,
       description: entry.description,
       projectId: project.id,

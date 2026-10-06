@@ -111,9 +111,10 @@ export function automotiveArtwork(mod, nested = false, compact = false) {
     '<div class="garage-light light-a"></div><div class="garage-light light-b"></div>' +
     '<div class="speed-arc arc-a"></div><div class="speed-arc arc-b"></div>' +
     '<div class="road-lines"></div>' +
-    '<svg class="car-outline" viewBox="0 0 800 360" aria-hidden="true"><path d="M83 236c38-3 56-23 82-59 25-34 52-56 98-65 63-13 174-17 250-4 48 8 84 28 120 61 20 18 31 33 54 41l43 9-1 34-36 7c-14 42-48 65-91 65-44 0-78-23-92-63H273c-14 40-48 63-92 63-44 0-78-24-92-65l-37-7 4-37z"/><path d="M247 115c28-49 58-68 113-76 57-8 129-4 184 11 39 10 68 32 100 70"/></svg>' +
+    '<svg class="car-outline" viewBox="0 0 900 380" aria-hidden="true"><path d="M68 245c50-8 78-28 118-78 38-48 76-71 138-82 82-14 208-17 299 0 57 11 98 34 139 72 23 21 43 45 76 55l25 8-2 36-39 8c-15 45-52 72-99 72-48 0-84-25-101-68H311c-16 43-53 68-101 68-48 0-85-27-100-72l-43-8 1-31z"/><path d="M278 111c31-49 71-73 134-81 66-8 151-3 216 15 44 12 78 35 116 75"/><path d="M332 96h266l75 28H276z"/></svg>' +
     '<div class="art-copy"><span>' + mod.internalName + '</span><strong>' + getProjectName(mod) + '</strong><p>' + (mod.subtitle || mod.tagline || "") + '</p></div>' +
     '<div class="art-badge">' + statusBadge(mod.status,true) + '</div>' +
+    '<div class="art-annotation"><i></i><span>PROJECT 01 / GARAGE CONCEPT</span></div>' +
     '<div class="art-data"><span>BeamNG.drive</span><span>Creator build</span><span>Visual placeholder</span></div>' +
   '</div>';
 }
@@ -147,9 +148,10 @@ export function featureCard(feature, index = 0) {
 }
 
 export function updateCard(update, project = null, prefix = "") {
+  const pill = update.category || (project ? project.internalName : "Torqz");
   return '<article class="update-card">' +
     '<div class="update-card-date"><span>' + update.displayDate + '</span></div>' +
-    '<div class="update-card-copy"><span class="update-eyebrow">' + (project ? getProjectName(project) : "Torqz Mods") + '</span><h3>' + update.title + '</h3><p>' + update.description + '</p>' +
+    '<div class="update-card-copy"><span class="update-pill">' + pill + '</span><span class="update-eyebrow">' + (project ? getProjectName(project) : "Torqz Mods") + '</span><h3>' + update.title + '</h3><p>' + update.description + '</p>' +
       (project ? '<a class="text-link" href="' + prefix + 'mods/' + project.slug + '.html">Read Update <span>→</span></a>' : '') +
     '</div>' +
     (update.image ? '<div class="update-card-media"><img src="' + prefix + update.image + '" alt="' + update.title + '" loading="lazy"></div>' : '<div class="update-card-accent" aria-hidden="true"></div>') +
