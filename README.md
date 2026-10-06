@@ -1,16 +1,32 @@
-# Torqz Mods V5
+# Torqz Mods
 
-V5 is the first Torqz draft structured as a real multi-page website rather than a single landing page.
+Production-oriented static website for the Torqz Mods BeamNG.drive modding brand.
 
-## Pages
+## Architecture
+
 - `index.html` — homepage
-- `mods.html` — mod library
-- `mods/project-01.html` — individual mod page
-- `updates.html` — development/news log
-- `install.html` — installation help
+- `mods.html` — searchable/filterable mod library
+- `mods/project-01.html` — data-driven mod detail page
+- `about.html` — brand/about page
+- `support.html` — support hub and FAQ
+- `install.html` — installation guide
+- `updates.html` — development/release log
+- `js/config.js` — centralized site/social/support configuration
+- `js/mods.js` — reusable mod data source
+- `js/components.js` — shared header/footer/mod-card rendering
+- `js/main.js` — interactions and page behavior
+- `css/main.css` — responsive design system
 
-## Local preview
-Open `index.html` after extracting the folder. For the most accurate preview, serve the folder with any simple local web server.
+## Configuration
+
+Edit `js/config.js` to add real Discord, TikTok, YouTube, support, bug-report, suggestion, or contact links.
+
+Mod metadata lives in `js/mods.js`. UI cards and detail pages render from that data instead of duplicating mod content throughout the site.
 
 ## Publishing
-This build is ready for GitHub Pages, Cloudflare Pages, or Netlify. Replace placeholder community links and Project 01 data once those are real.
+
+The repository is compatible with GitHub Pages from the `main` branch root. All navigation uses relative URLs so it can later move to a custom domain without rewriting the site structure.
+
+## Release integrity
+
+The project intentionally avoids fake download numbers, fake users, fake reviews, fake release dates, and fake compatibility data.
