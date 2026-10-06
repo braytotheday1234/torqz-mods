@@ -433,3 +433,12 @@ body{background:linear-gradient(180deg,#070809,#080a0c 45%,#070809);color:var(--
 @media(prefers-reduced-motion:reduce){
   .principle-item,.development-visual,.project-tile,.support-option{transition:none!important}
 }
+
+.simple-status-list strong.complete{color:#a9d8b3}
+.simple-status-list strong.in-progress{color:#ffc09f}
+.casual-media-placeholder{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,.45fr);gap:24px;align-items:center}
+.casual-media-placeholder>.project-visual-brand{min-height:380px}
+.casual-media-placeholder>p{max-width:380px;color:#8f98a1;font-size:13px;line-height:1.65}
+.casual-support-card button.project-link{border:0;background:transparent;padding:22px 0 0;min-height:auto;cursor:pointer;text-align:left}
+.casual-support-card.available small[data-service-badge]{color:#a7d9b2}
+@media(max-width:700px){.casual-media-placeholder{grid-template-columns:1fr}.casual-media-placeholder>.project-visual-brand{min-height:300px}}
