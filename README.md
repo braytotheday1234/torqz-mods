@@ -1,6 +1,6 @@
-# Torqz Mods V3
+# Torqz Mods V4
 
-Major visual redesign of the Torqz Mods BeamNG.drive website.
+Deep polish and interaction pass of the Torqz Mods BeamNG.drive website.
 
 ## What changed
 
