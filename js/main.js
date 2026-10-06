@@ -9,7 +9,7 @@ import {
   resolvedDownloadState
 } from "./mods.js";
 import { UPDATES, updatesForProject } from "./updates.js";
-import { mountHeader, mountFooter, modTile, mediaFrame, statusBadge, comingSoonBadge } from "./components.js";
+import { mountHeader, mountFooter, modTile, mediaFrame, statusBadge } from "./components.js";
 
 const $ = (selector, scope = document) => scope.querySelector(selector);
 const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
@@ -641,17 +641,22 @@ if (detail) {
         projectUpdates.map((item, index) => updateMarkup(item, index, "../")).join("") +
       '</div></section>' : '') +
 
-      '<section class="project-section install-section"><div class="project-section-head"><span>Setup / 05</span><h2>Installation</h2><p>Instructions are project-specific and only appear once the real method is known.</p></div>' + installHtml + '</section>' +
+      '<section class="project-section install-section"><div class="project-section-head"><span>Setup / 05</span><h2>Installation</h2><p>Instructions are project-specific and only appear once the real method is known.</p></div>' +
+      (mod.installationWarning ? '<div class="install-warning project-install-warning">' + mod.installationWarning + '</div>' : '') +
+      installHtml +
+      (mod.installationNotes || mod.installationNote ? '<div class="project-notes"><strong>Installation notes</strong><p>' + (mod.installationNotes || mod.installationNote) + '</p></div>' : '') +
+      '</section>' +
 
       '<section class="project-section compatibility-section"><div class="compatibility-copy"><span>Compatibility / 06</span><h2>Compatibility</h2>' + statusBadge(mod.status) + '</div><div class="compatibility-lines">' +
         '<div><span>Tested BeamNG Version</span><b>' + displayValue(compat.testedVersion) + '</b></div>' +
         '<div><span>Minimum Version</span><b>' + displayValue(compat.minimumVersion) + '</b></div>' +
-        (compat.notes ? '<div><span>Notes</span><b>' + compat.notes + '</b></div>' : '') +
+        (compat.notes || mod.compatibilityNotes ? '<div><span>Notes</span><b>' + (compat.notes || mod.compatibilityNotes) + '</b></div>' : '') +
         '<div><span>Download State</span><b>' + downloadLabel(downloadState) + '</b></div>' +
       '</div></section>' +
 
       (knownIssuesText ? '<section class="project-section"><div class="project-section-head"><span>Issues / 07</span><h2>Known issues</h2><p>Only actual configured issues are listed.</p></div><div class="known-issues">' + knownIssuesText + '</div></section>' : '') +
 
+      (mod.releaseNotes ? '<section class="project-section"><div class="project-section-head"><span>Release / 08</span><h2>Release notes</h2></div><div class="project-notes"><p>' + mod.releaseNotes + '</p></div></section>' : '') +
       (mod.changelog?.length ? '<section class="project-section changelog-section"><div class="project-section-head"><span>History / 08</span><h2>' + (downloadReady ? "Changelog" : "Development history") + '</h2></div><div class="changelog-list">' +
         mod.changelog.map((entry, index) => '<article class="changelog-item ' + (index === 0 ? "open" : "") + '"><button type="button" data-changelog-toggle aria-expanded="' + (index === 0 ? "true" : "false") + '"><span><strong>' + entry.version + '</strong><small>' + displayValue(entry.date, "Current development") + '</small></span><b aria-hidden="true">' + (index === 0 ? "−" : "+") + '</b></button><div class="changelog-body"><div>' +
           Object.entries(entry.groups || {}).filter(([, items]) => items?.length).map(([label, items]) => '<section><h3>' + label + '</h3><ul>' + items.map((item) => '<li>' + item + '</li>').join("") + '</ul></section>').join("") +
