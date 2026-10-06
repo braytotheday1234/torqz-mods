@@ -1,42 +1,113 @@
-# Torqz Mods V4
+# Torqz Mods V5
 
-Deep polish and interaction pass of the Torqz Mods BeamNG.drive website.
+Final major quality/refinement pass for the Torqz Mods BeamNG.drive website before real Project 01 media and release information begin replacing placeholders.
 
-## What changed
+## Design direction
 
-V3 keeps the existing data-driven/static GitHub Pages architecture, but substantially rebuilds the visual system and page composition.
+V5 preserves the established Torqz identity:
 
-- Cinematic 80–95vh homepage hero
-- Large featured-project reveal
-- Media-dominant project tiles
-- Editorial philosophy and updates sections
-- Data-driven development journal
-- Command-style search with Ctrl/Cmd+K, slash, arrow-key navigation, Enter, and Escape
-- Search result thumbnails, status, category, and version
-- Search/filter/sort mod library
-- Cinematic data-driven project detail page
-- Lightbox gallery
-- Four-step installation presentation
-- Dedicated compatibility state
-- Expandable changelog
-- Fully reworked About and Support pages
-- Responsive mobile layouts
-- Centralized site links in js/config.js
-- Centralized mod data in js/mods.js
-- Centralized update data in js/updates.js
+- Black / charcoal automotive visual system
+- White and light typography
+- Torqz orange accent
+- Large editorial headlines
+- Cinematic project media
+- Existing navigation, mods library, updates, About, Support, FAQ, and footer structure
 
-## Configuration
-
-Edit js/config.js for Discord, GitHub, YouTube, TikTok, support, bug report, suggestion, and contact links.
-
-Empty URLs intentionally render as Coming Soon rather than fake or dead destinations.
+V5 is a refinement, not a redesign.
 
 ## Project data
 
-Edit js/mods.js. UI listings and Project 01 render from the data model.
+Project content lives in `js/mods.js`. The data model now supports:
 
-Project media currently uses clearly labeled development SVG placeholders under assets/projects/project-01/. Replace those files with real optimized WebP/AVIF/JPG/PNG screenshots later and update the data file if filenames change.
+- `internalName`
+- `publicName`
+- `tagline`
+- `shortDescription`
+- `fullDescription`
+- `featureSummary`
+- `technicalDescription`
+- `releaseNotes`
+- `installationNotes`
+- `compatibilityNotes`
+- project status and current phase
+- milestones
+- development log
+- category and configured tags
+- version, file size, release date
+- BeamNG compatibility data
+- known issues
+- project-specific installation
+- download state and URL
+- hero image / hero video / poster
+- thumbnail and focal positions
+- mixed gallery media
+- video clips
+- changelog
+- credits
 
-## Publishing
+Null or empty values remain intentionally unpublished instead of being guessed.
 
-GitHub Pages can continue deploying from the main branch root.
+## Project naming
+
+Project 01 keeps its development identifier through `internalName`.
+
+When a final public name exists, set:
+
+`publicName: "Real Mod Name"`
+
+The website will display the public name prominently while retaining Project 01 as its development identifier.
+
+## Project media
+
+Current development media lives under:
+
+`assets/projects/project-01/`
+
+The media layer supports images and local MP4/WebM video. Real media can replace the current SVG development placeholders by updating the project data; the page layouts do not need to be rewritten.
+
+Use optimized WebP or AVIF for screenshots where practical. Gallery items can optionally provide `srcset`, `sizes`, captions, alt text, poster images, and focal positions.
+
+## Updates
+
+`js/updates.js` contains site-level updates and automatically derives project development-log entries from project data. A development entry can therefore appear on the project page, Updates page, and homepage without being manually duplicated.
+
+## Configuration
+
+External destinations remain centralized in `js/config.js`:
+
+- Discord
+- GitHub
+- YouTube
+- TikTok
+- support
+- bug reporting
+- suggestions
+- contact email
+
+Empty external destinations render intentional **Coming Soon** states. No fake URLs are used.
+
+## Release states
+
+Project download states support:
+
+- unavailable
+- testing
+- private-beta
+- released
+- archived
+
+A public Download control appears only when the project is actually marked Released and a real download URL exists.
+
+## Accessibility and interaction
+
+V5 includes keyboard/focus handling for search, mobile navigation, FAQ, and project media lightbox; reduced-motion support; visible focus states; screen-reader labels; intentional error states; and touch-friendly controls.
+
+## SEO / indexing
+
+The production site includes unique page metadata, canonical URLs, Open Graph/Twitter metadata, a WebSite structured-data block on the homepage, project breadcrumb structured data, `sitemap.xml`, and `robots.txt`.
+
+## Deployment
+
+The production website remains a static GitHub Pages build from the `main` branch root.
+
+There is no package-based build, linter, or type-check pipeline in this repository. GitHub Pages deployment is the production build check.
