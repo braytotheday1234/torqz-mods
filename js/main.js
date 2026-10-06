@@ -178,7 +178,10 @@ const videoObserver = "IntersectionObserver" in window ? new IntersectionObserve
     videoObserver.unobserve(video);
   });
 }, { rootMargin: "240px" }) : null;
-$$("[data-lazy-video]").forEach((video) => videoObserver ? videoObserver.observe(video) : video.load());
+function wireVideos(scope = document) {
+  scope.querySelectorAll("[data-lazy-video]").forEach((video) => videoObserver ? videoObserver.observe(video) : video.load());
+}
+wireVideos();
 
 const featured = $("[data-featured-project]");
 if (featured) {
@@ -201,6 +204,7 @@ if (featured) {
       '<div class="featured-spec-row"><span><small>Version</small><b>' + mod.version + '</b></span><span><small>BeamNG</small><b>' + mod.beamngVersion + '</b></span><span><small>Current phase</small><b>' + mod.currentPhase + '</b></span></div>' +
       '<a class="inline-arrow" href="mods/' + mod.slug + '.html">View Project <b>→</b></a></div>';
     wireImages(featured);
+    wireVideos(featured);
   }
 }
 
@@ -317,6 +321,7 @@ if (detail) {
       '<section class="project-section credits-section"><div><span>Credits / 08</span><h2>Project credits</h2></div><div>' + mod.credits.map((credit) => '<strong>' + credit + '</strong>').join("") + '</div></section>' +
       (related.length ? '<section class="project-section"><div class="project-section-head"><span>More / 09</span><h2>More from Torqz</h2></div><div class="mod-grid">' + related.map((item) => modTile(item, "../")).join("") + '</div></section>' : '');
     wireImages(detail);
+    wireVideos(detail);
   }
 }
 
