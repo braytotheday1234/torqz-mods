@@ -1,113 +1,87 @@
-# Torqz Mods V5
+# Torqz Mods V6
 
-Final major quality/refinement pass for the Torqz Mods BeamNG.drive website before real Project 01 media and release information begin replacing placeholders.
+V6 is the content-density, visual-depth, and brand-polish pass for the Torqz Mods website.
 
-## Design direction
+The site remains a static GitHub Pages project and preserves the established dark automotive Torqz design. The goal of V6 is to make the site feel like the active development home of **Torqz Garage / Project 01**, even before release screenshots and download information exist.
 
-V5 preserves the established Torqz identity:
+## Torqz Garage
 
-- Black / charcoal automotive visual system
-- White and light typography
-- Torqz orange accent
-- Large editorial headlines
-- Cinematic project media
-- Existing navigation, mods library, updates, About, Support, FAQ, and footer structure
+Project 01 now has the public development name:
 
-V5 is a refinement, not a redesign.
+**Torqz Garage**
 
-## Project data
+Tagline:
 
-Project content lives in `js/mods.js`. The data model now supports:
+**Persistent vehicle ownership for BeamNG.drive.**
 
-- `internalName`
-- `publicName`
-- `tagline`
-- `shortDescription`
-- `fullDescription`
-- `featureSummary`
-- `technicalDescription`
-- `releaseNotes`
-- `installationNotes`
-- `compatibilityNotes`
-- project status and current phase
+The internal identifier remains **Project 01**.
+
+Current project data is stored in `js/mods.js`.
+
+## Current confirmed development state
+
+- Foundation — Complete
+- Vehicle Data — In Progress
+- Persistent Vehicle ID — Planned
+- Garage Storage — Planned
+- Service History — Planned
+- UI — Planned
+- Testing — Planned
+
+The site does not use percentage-complete bars.
+
+## Development model
+
+The project data supports:
+
+- public and internal names
+- tagline and descriptions
+- categories and tags
+- current phase
 - milestones
+- live systems
+- planned features
 - development log
-- category and configured tags
-- version, file size, release date
-- BeamNG compatibility data
-- known issues
+- project media
+- development media
+- image focal positions
+- local video clips and posters
+- version and release state
+- compatibility
 - project-specific installation
-- download state and URL
-- hero image / hero video / poster
-- thumbnail and focal positions
-- mixed gallery media
-- video clips
+- known issues
 - changelog
+- download state
 - credits
 
-Null or empty values remain intentionally unpublished instead of being guessed.
+Project 01 development-log entries automatically flow into the project page, Updates page, and homepage development activity.
 
-## Project naming
+## Media
 
-Project 01 keeps its development identifier through `internalName`.
+Real Project 01 media can be added without redesigning the website.
 
-When a final public name exists, set:
+Use:
 
-`publicName: "Real Mod Name"`
+- `projectMedia` for release-quality or project-facing screenshots/clips
+- `developmentMedia` for console output, telemetry tests, VS Code screenshots, debug images, testing captures, and development clips
+- `heroImage` / `heroVideo` for the primary project hero
 
-The website will display the public name prominently while retaining Project 01 as its development identifier.
+Until real project media exists, V6 uses a data-driven Torqz development graphic rather than a fake vehicle screenshot.
 
-## Project media
+## Brand assets
 
-Current development media lives under:
+The user-provided Torqz logo is stored at:
 
-`assets/projects/project-01/`
+`assets/brand/torqz-logo.webp`
 
-The media layer supports images and local MP4/WebM video. Real media can replace the current SVG development placeholders by updating the project data; the page layouts do not need to be rewritten.
+It is used in the navbar, footer, development visuals, favicon treatment, and Open Graph metadata.
 
-Use optimized WebP or AVIF for screenshots where practical. Gallery items can optionally provide `srcset`, `sizes`, captions, alt text, poster images, and focal positions.
+## External links
 
-## Updates
+External destinations remain centralized in `js/config.js`.
 
-`js/updates.js` contains site-level updates and automatically derives project development-log entries from project data. A development entry can therefore appear on the project page, Updates page, and homepage without being manually duplicated.
-
-## Configuration
-
-External destinations remain centralized in `js/config.js`:
-
-- Discord
-- GitHub
-- YouTube
-- TikTok
-- support
-- bug reporting
-- suggestions
-- contact email
-
-Empty external destinations render intentional **Coming Soon** states. No fake URLs are used.
-
-## Release states
-
-Project download states support:
-
-- unavailable
-- testing
-- private-beta
-- released
-- archived
-
-A public Download control appears only when the project is actually marked Released and a real download URL exists.
-
-## Accessibility and interaction
-
-V5 includes keyboard/focus handling for search, mobile navigation, FAQ, and project media lightbox; reduced-motion support; visible focus states; screen-reader labels; intentional error states; and touch-friendly controls.
-
-## SEO / indexing
-
-The production site includes unique page metadata, canonical URLs, Open Graph/Twitter metadata, a WebSite structured-data block on the homepage, project breadcrumb structured data, `sitemap.xml`, and `robots.txt`.
+Unconfigured Discord, YouTube, TikTok, bug-report, and suggestion destinations remain intentional **Coming Soon** states. No fake URLs are used.
 
 ## Deployment
 
-The production website remains a static GitHub Pages build from the `main` branch root.
-
-There is no package-based build, linter, or type-check pipeline in this repository. GitHub Pages deployment is the production build check.
+Production deploys from the `main` branch root through GitHub Pages.

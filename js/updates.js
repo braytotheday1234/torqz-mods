@@ -2,25 +2,16 @@ import { MODS, getProjectName } from "./mods.js";
 
 const SITE_UPDATES = Object.freeze([
   {
-    id: "site-v5-quality-pass",
+    id: "site-v6-brand-polish",
     date: "2026-10-06",
-    displayDate: "10.06.26",
+    displayDate: "Oct 6, 2026",
     category: "Website",
-    title: "Torqz Mods V5 quality pass",
-    description: "The established Torqz design received a final major refinement focused on accessibility, responsive behavior, Coming Soon states, project-data architecture, media readiness, error handling, SEO, and release readiness.",
+    title: "Torqz Mods V6 brand polish",
+    description: "The site is being refined into the development home for Torqz Garage with denser project information, stronger development presentation, and less placeholder-heavy layout.",
     projectId: null,
+    currentPhase: null,
     image: null,
-    articleUrl: null
-  },
-  {
-    id: "project-01-structure",
-    date: "2026-10-06",
-    displayDate: "10.06.26",
-    category: "Project 01",
-    title: "Project release structure expanded",
-    description: "Project 01 now supports public naming, richer media, compatibility data, known issues, project-specific installation, changelog groups, milestones, development logs, credits, and future download states without inventing unfinished information.",
-    projectId: "project-01",
-    image: null,
+    video: null,
     articleUrl: null
   }
 ]);
@@ -35,6 +26,7 @@ function derivedProjectUpdates() {
       title: entry.title,
       description: entry.description,
       projectId: project.id,
+      currentPhase: entry.relatedMilestone || project.currentPhase || null,
       image: entry.image || null,
       video: entry.video || null,
       relatedMilestone: entry.relatedMilestone || null,
@@ -45,7 +37,9 @@ function derivedProjectUpdates() {
 }
 
 export const UPDATES = Object.freeze(
-  [...SITE_UPDATES, ...derivedProjectUpdates()].sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+  [...SITE_UPDATES, ...derivedProjectUpdates()].sort((a, b) =>
+    (b.date || "").localeCompare(a.date || "") || b.id.localeCompare(a.id)
+  )
 );
 
 export function updatesForProject(projectId) {

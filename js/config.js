@@ -1,7 +1,7 @@
 export const SITE_CONFIG = Object.freeze({
   name: "Torqz Mods",
   shortName: "Torqz",
-  description: "Independent BeamNG.drive mods, development updates, installation help, and clean releases.",
+  description: "The development home for Torqz Garage, Project 01, and future Torqz BeamNG.drive projects.",
   siteUrl: "https://torqzmods.github.io/torqz-mods/",
   environment: "production",
   allowIndexing: true,

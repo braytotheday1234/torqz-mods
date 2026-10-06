@@ -1,15 +1,24 @@
 import { SITE_CONFIG, configured } from "./config.js";
 import {
   MODS,
-  CATEGORIES,
   getModBySlug,
   getProjectName,
   getProjectLabel,
   displayValue,
+  projectCategories,
+  projectCategoryLabel,
   resolvedDownloadState
 } from "./mods.js";
 import { UPDATES, updatesForProject } from "./updates.js";
-import { mountHeader, mountFooter, modTile, mediaFrame, statusBadge } from "./components.js";
+import {
+  mountHeader,
+  mountFooter,
+  modTile,
+  mediaFrame,
+  developmentVisual,
+  statusBadge,
+  systemStateBadge
+} from "./components.js";
 
 const $ = (selector, scope = document) => scope.querySelector(selector);
 const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
@@ -31,7 +40,6 @@ if (SITE_CONFIG.allowIndexing === false || SITE_CONFIG.environment !== "producti
 
 document.documentElement.classList.add("js");
 requestAnimationFrame(() => document.body.classList.add("page-ready"));
-
 $$("[data-year]").forEach((node) => (node.textContent = new Date().getFullYear()));
 
 function toast(message) {
@@ -40,42 +48,8 @@ function toast(message) {
   node.textContent = message;
   node.classList.add("show");
   clearTimeout(toast.timer);
-  toast.timer = setTimeout(() => node.classList.remove("show"), 2600);
+  toast.timer = setTimeout(() => node.classList.remove("show"), 2500);
 }
-
-function bindPlaceholderLinks(scope = document) {
-  $$("[data-placeholder-link]", scope).forEach((node) => {
-    if (node.dataset.boundPlaceholder) return;
-    node.dataset.boundPlaceholder = "true";
-    node.addEventListener("click", (event) => {
-      event.preventDefault();
-      toast("Coming soon — the real destination has not been configured yet.");
-    });
-  });
-}
-bindPlaceholderLinks();
-
-function wireConfiguredActions(scope = document) {
-  $("[data-config-link]", scope).forEach((node) => {
-    if (node.dataset.configBound) return;
-    node.dataset.configBound = "true";
-    const key = node.dataset.configLink;
-    const url = configured(SITE_CONFIG[key]);
-    const card = node.closest("[data-service-card]");
-    const state = card?.querySelector("[data-service-state]");
-    if (url) {
-      card?.classList.add("is-available");
-      if (state) state.textContent = "External";
-      const trailing = node.querySelector("span");
-      if (trailing) trailing.textContent = "Open ↗";
-      node.addEventListener("click", () => window.open(url, "_blank", "noopener,noreferrer"));
-    } else {
-      if (state) state.textContent = "Coming Soon";
-      node.addEventListener("click", () => toast("Coming soon — this service has not been configured yet."));
-    }
-  });
-}
-wireConfiguredActions();
 
 function trapFocus(event, container) {
   if (event.key !== "Tab" || !container) return;
@@ -95,6 +69,42 @@ function trapFocus(event, container) {
     first.focus();
   }
 }
+
+function bindPlaceholderLinks(scope = document) {
+  $$("[data-placeholder-link]", scope).forEach((node) => {
+    if (node.dataset.boundPlaceholder) return;
+    node.dataset.boundPlaceholder = "true";
+    node.addEventListener("click", (event) => {
+      event.preventDefault();
+      toast("Coming soon — the real destination has not been configured yet.");
+    });
+  });
+}
+bindPlaceholderLinks();
+
+function hydrateServiceCards(scope = document) {
+  $$("[data-service-key]", scope).forEach((card) => {
+    if (card.dataset.serviceBound) return;
+    card.dataset.serviceBound = "true";
+    const key = card.dataset.serviceKey;
+    const url = configured(SITE_CONFIG[key]);
+    const badge = $("[data-service-badge]", card);
+    const action = $("[data-service-action]", card);
+    if (!url) {
+      if (badge) badge.textContent = "Coming Soon";
+      card.classList.add("is-coming-soon");
+      return;
+    }
+    card.classList.add("is-available");
+    card.classList.remove("is-coming-soon");
+    if (badge) badge.textContent = "External";
+    if (action) {
+      action.hidden = false;
+      action.addEventListener("click", () => window.open(url, "_blank", "noopener,noreferrer"));
+    }
+  });
+}
+hydrateServiceCards();
 
 const header = $("[data-header]");
 if (header) {
@@ -168,10 +178,13 @@ function searchText(mod) {
     mod.internalName,
     mod.subtitle,
     mod.category,
+    ...(mod.categories || []),
     mod.status,
+    mod.currentPhase,
     mod.shortDescription,
     mod.fullDescription,
     ...(mod.tags || []),
+    ...(mod.plannedFeatures || []),
     mod.version
   ].filter(Boolean).join(" ").toLowerCase();
 }
@@ -182,23 +195,22 @@ function renderGlobalSearch() {
   const matches = MODS.filter((mod) => searchText(mod).includes(query));
 
   if (!query) {
-    globalResults.innerHTML = '<div class="command-empty"><strong>Search the Torqz library.</strong><span>Names, category, status, tags, descriptions, and versions.</span></div>';
+    globalResults.innerHTML = '<div class="command-empty"><strong>Search Torqz projects.</strong><span>Try Torqz Garage, Project 01, Vehicle Data, telemetry, Gameplay, or Utility.</span></div>';
     searchIndex = -1;
     return;
   }
   if (!matches.length) {
-    globalResults.innerHTML = '<div class="command-empty"><strong>No Torqz projects found.</strong><span>Try another project name, category, or status.</span></div>';
+    globalResults.innerHTML = '<div class="command-empty"><strong>No Torqz projects found.</strong><span>Try another project name, phase, category, or feature.</span></div>';
     searchIndex = -1;
     return;
   }
 
-  globalResults.innerHTML = matches.map((mod, index) => {
-    const name = getProjectName(mod);
-    return '<a class="command-result ' + (index === 0 ? "selected" : "") + '" href="' + base + 'mods/' + mod.slug + '.html" data-search-result>' +
-      '<img src="' + base + (mod.thumbnail || mod.fallbackThumbnail) + '" data-fallback="' + base + (mod.fallbackThumbnail || "") + '" data-fade-image alt="" width="112" height="70" loading="lazy">' +
-      '<span><strong>' + name + '</strong><small>' + (mod.category || "Other") + ' · ' + displayValue(mod.status) + ' · ' + displayValue(mod.version) + '</small></span><b>↗</b></a>';
-  }).join("");
-  wireImages(globalResults);
+  globalResults.innerHTML = matches.map((mod, index) =>
+    '<a class="command-result ' + (index === 0 ? "selected" : "") + '" href="' + base + 'mods/' + mod.slug + '.html" data-search-result>' +
+      '<div class="command-result-mark"><img src="' + base + 'assets/brand/torqz-logo.webp" alt="" width="62" height="62"></div>' +
+      '<span><strong>' + getProjectName(mod) + '</strong><small>' + mod.internalName + ' · ' + projectCategoryLabel(mod) + ' · ' + displayValue(mod.currentPhase, "Development") + '</small></span><b>↗</b>' +
+    '</a>'
+  ).join("");
   searchIndex = 0;
 }
 
@@ -255,7 +267,7 @@ const observer = "IntersectionObserver" in window ? new IntersectionObserver((en
     entry.target.classList.add("visible");
     observer.unobserve(entry.target);
   });
-}, { threshold: 0.1, rootMargin: "0px 0px -32px" }) : null;
+}, { threshold: 0.08, rootMargin: "0px 0px -24px" }) : null;
 
 function wireReveal(scope = document) {
   $$("[data-reveal]", scope).forEach((node) => observer ? observer.observe(node) : node.classList.add("visible"));
@@ -300,28 +312,9 @@ const videoObserver = "IntersectionObserver" in window ? new IntersectionObserve
 }, { rootMargin: "260px" }) : null;
 
 function wireVideos(scope = document) {
-  $("[data-lazy-video]", scope).forEach((video) => {
+  $$("[data-lazy-video]", scope).forEach((video) => {
     if (video.dataset.videoBound) return;
     video.dataset.videoBound = "true";
-    video.addEventListener("error", () => {
-      const fallback = video.dataset.fallback;
-      if (!fallback) {
-        video.closest(".media-frame")?.classList.add("media-failed");
-        return;
-      }
-      const img = document.createElement("img");
-      img.src = fallback;
-      img.alt = "";
-      img.loading = "lazy";
-      img.decoding = "async";
-      img.dataset.fadeImage = "";
-      img.dataset.fallback = fallback;
-      const frame = video.closest(".media-frame");
-      if (frame) {
-        frame.replaceChildren(img);
-        wireImages(frame);
-      }
-    }, { once: true });
     videoObserver ? videoObserver.observe(video) : video.load();
   });
 }
@@ -357,9 +350,7 @@ function updateProjectHead(mod) {
   setMeta('meta[property="og:title"]', "content", name + " | Torqz Mods");
   setMeta('meta[property="og:description"]', "content", description);
   setMeta('meta[name="twitter:card"]', "content", "summary_large_image");
-
-  const image = mod.heroImage || mod.fallbackHero;
-  if (image) setMeta('meta[property="og:image"]', "content", new URL("../" + image, location.href).href);
+  setMeta('meta[property="og:image"]', "content", new URL("assets/brand/torqz-logo.webp", SITE_CONFIG.siteUrl).href);
 
   let canonical = document.head.querySelector('link[rel="canonical"]');
   if (!canonical) {
@@ -369,8 +360,7 @@ function updateProjectHead(mod) {
   }
   canonical.href = new URL("mods/" + mod.slug + ".html", SITE_CONFIG.siteUrl).href;
 
-  const oldSchema = document.head.querySelector("#project-breadcrumb-schema");
-  oldSchema?.remove();
+  document.head.querySelector("#project-breadcrumb-schema")?.remove();
   const script = document.createElement("script");
   script.type = "application/ld+json";
   script.id = "project-breadcrumb-schema";
@@ -386,33 +376,40 @@ function updateProjectHead(mod) {
   document.head.appendChild(script);
 }
 
+function renderProjectMedia(mod, options = {}) {
+  if (mod.heroImage || mod.heroVideo) {
+    const prefix = options.nested ? "../" : "";
+    return mediaFrame({
+      src: mod.heroImage ? prefix + mod.heroImage : "",
+      video: mod.heroVideo ? prefix + mod.heroVideo : "",
+      poster: mod.heroVideoPoster ? prefix + mod.heroVideoPoster : "",
+      alt: getProjectName(mod) + " project media",
+      loading: options.loading || "lazy",
+      className: options.className || "",
+      position: mod.heroImagePosition || "center"
+    });
+  }
+  return developmentVisual(mod, {
+    compact: Boolean(options.compact),
+    showMilestones: options.showMilestones !== false,
+    className: options.className || ""
+  });
+}
+
 const homeHeroMedia = $("[data-home-hero-media]");
 if (homeHeroMedia) {
-  const featuredProject = MODS.find((item) => item.featured);
-  if (featuredProject) {
-    homeHeroMedia.innerHTML = mediaFrame({
-      src: featuredProject.heroImage || "",
-      video: featuredProject.heroVideo || "",
-      poster: featuredProject.heroVideoPoster || "",
-      fallback: featuredProject.fallbackHero || "",
-      alt: "",
-      loading: "eager",
-      className: "home-hero-media-frame",
-      position: featuredProject.heroImagePosition || "center"
-    });
-    wireImages(homeHeroMedia);
-    wireVideos(homeHeroMedia);
-  }
+  const mod = MODS.find((item) => item.featured);
+  if (mod) homeHeroMedia.innerHTML = renderProjectMedia(mod, { loading: "eager", showMilestones: false });
 }
 
 const homeStatus = $("[data-home-status]");
 if (homeStatus) {
-  const featuredProject = MODS.find((item) => item.featured);
-  if (featuredProject) {
+  const mod = MODS.find((item) => item.featured);
+  if (mod) {
     homeStatus.innerHTML =
-      '<div><small>Project</small><strong>' + featuredProject.internalName + '</strong></div>' +
-      '<div><small>Status</small><strong>' + displayValue(featuredProject.status) + '</strong></div>' +
-      '<div><small>Current Phase</small><strong>' + displayValue(featuredProject.currentPhase, "Not published") + '</strong></div>';
+      '<div><small>Project</small><strong>' + mod.internalName + '</strong></div>' +
+      '<div><small>Status</small><strong>' + displayValue(mod.status) + '</strong></div>' +
+      '<div><small>Current Phase</small><strong>' + displayValue(mod.currentPhase) + '</strong></div>';
   }
 }
 
@@ -420,50 +417,73 @@ const featured = $("[data-featured-project]");
 if (featured) {
   const mod = MODS.find((item) => item.featured);
   if (mod) {
-    const name = getProjectName(mod);
-    const heroMedia = mediaFrame({
-      src: mod.heroImage,
-      alt: name + " development preview",
-      video: mod.heroVideo,
-      poster: mod.heroVideoPoster,
-      fallback: mod.fallbackHero,
-      loading: "eager",
-      className: "featured-media-frame",
-      position: mod.heroImagePosition
-    });
+    const milestonePreview = (mod.milestones || []).slice(0, 4).map((item) =>
+      '<div class="featured-milestone"><span>' + item.name + '</span>' + systemStateBadge(item.status) + '</div>'
+    ).join("");
     featured.innerHTML =
-      '<a class="featured-project-media" href="mods/' + mod.slug + '.html">' + heroMedia +
-      '<span class="featured-label">Featured Project</span><span class="featured-corner" aria-hidden="true"></span>' +
-      '<div class="featured-overlay"><div><span>' + (mod.category || "Other") + '</span><h2>' + name + '</h2></div><div class="featured-status"><small>Status</small><strong>' + mod.status + '</strong></div></div>' +
-      '<span class="featured-view">View Project <b>→</b></span></a>' +
-      '<div class="featured-project-copy"><p>' + (mod.shortDescription || mod.fullDescription) + '</p>' +
-      '<div class="featured-spec-row"><span><small>Version</small><b>' + displayValue(mod.version) + '</b></span><span><small>BeamNG</small><b>' + displayValue(mod.beamngCompatibility?.testedVersion) + '</b></span><span><small>Current phase</small><b>' + displayValue(mod.currentPhase, "Not published") + '</b></span></div>' +
-      '<a class="inline-arrow" href="mods/' + mod.slug + '.html">View Project <b>→</b></a></div>';
-    wireImages(featured);
-    wireVideos(featured);
+      '<a class="featured-project-media" href="mods/' + mod.slug + '.html" aria-label="View ' + getProjectName(mod) + '">' +
+        renderProjectMedia(mod, { loading: "eager", showMilestones: true }) +
+        '<span class="featured-label">' + mod.internalName + '</span>' +
+        '<span class="featured-view">View Project <b>→</b></span>' +
+      '</a>' +
+      '<div class="featured-project-copy">' +
+        '<span class="section-label">Current Project</span>' +
+        '<h2>' + getProjectName(mod) + '</h2>' +
+        '<p class="featured-tagline">' + mod.tagline + '</p>' +
+        '<div class="featured-project-state">' +
+          '<div><small>Status</small>' + statusBadge(mod.status) + '</div>' +
+          '<div><small>Current Phase</small><strong>' + mod.currentPhase + '</strong></div>' +
+          '<div><small>Category</small><strong>' + projectCategoryLabel(mod) + '</strong></div>' +
+        '</div>' +
+        '<p>' + mod.shortDescription + '</p>' +
+        (milestonePreview ? '<div class="featured-milestones">' + milestonePreview + '</div>' : '') +
+        '<a class="inline-arrow" href="mods/' + mod.slug + '.html">View Project <b>→</b></a>' +
+      '</div>';
+  }
+}
+
+const homeMilestones = $("[data-home-milestones]");
+if (homeMilestones) {
+  const mod = MODS.find((item) => item.featured);
+  if (mod) {
+    homeMilestones.innerHTML = '<section class="home-status-panel"><span class="section-label">Project 01 Status</span><h3>Development milestones</h3>' +
+      (mod.milestones || []).map((item, index) =>
+        '<div class="home-milestone-row"><span>' + String(index + 1).padStart(2, "0") + '</span><strong>' + item.name + '</strong>' + systemStateBadge(item.status) + '</div>'
+      ).join("") + '</section>';
+  }
+}
+
+const homeActivity = $("[data-home-activity]");
+if (homeActivity) {
+  const mod = MODS.find((item) => item.featured);
+  if (mod) {
+    const entries = (mod.developmentLog || []).slice().reverse().slice(0, 3);
+    homeActivity.innerHTML = '<section class="home-activity-panel"><span class="section-label">Recent Development</span><h3>What changed</h3>' +
+      entries.map((entry) =>
+        '<article class="home-activity-entry"><time datetime="' + entry.date + '">' + entry.displayDate + '</time><div><span>' + entry.category + '</span><h4>' + entry.title + '</h4><p>' + entry.description + '</p></div></article>'
+      ).join("") +
+      '<a class="inline-arrow" href="updates.html">View all updates <b>→</b></a></section>';
   }
 }
 
 const projectGrid = $("[data-project-grid]");
 if (projectGrid) {
-  projectGrid.innerHTML = MODS.map((mod) => modTile(mod, base)).join("") +
-    '<div class="future-project"><div class="future-grid" aria-hidden="true"></div><span>Future Torqz Project</span><strong>Reserved for the next release.</strong><p>No project name or vehicle art will appear here until a real future project exists.</p></div>';
-  wireImages(projectGrid);
+  projectGrid.innerHTML = MODS.map((mod) => modTile(mod, base)).join("");
 }
 
-function updateMarkup(item, index, rootPrefix = "") {
+function updateMarkup(item, index, rootPrefix = "", className = "") {
   const project = item.projectId ? MODS.find((mod) => mod.id === item.projectId) : null;
   const projectLink = project ? rootPrefix + "mods/" + project.slug + ".html" : "";
-  return '<article class="update-row">' +
+  return '<article class="update-row ' + className + '">' +
     '<div class="update-index">' + String(index + 1).padStart(2, "0") + '</div>' +
     '<time datetime="' + item.date + '">' + item.displayDate + '</time>' +
-    '<div><span>' + item.category + '</span><h3>' + item.title + '</h3><p>' + item.description + '</p></div>' +
+    '<div class="update-copy"><div class="update-kicker"><span>' + item.category + '</span>' + (item.currentPhase ? '<b>' + item.currentPhase + '</b>' : '') + '</div><h3>' + item.title + '</h3><p>' + item.description + '</p></div>' +
     (item.articleUrl
       ? '<a href="' + item.articleUrl + '">Read update <b>→</b></a>'
       : projectLink
         ? '<a href="' + projectLink + '">View project <b>→</b></a>'
         : '<a href="' + rootPrefix + 'updates.html">Updates <b>→</b></a>') +
-    '</article>';
+  '</article>';
 }
 
 const latestUpdates = $("[data-latest-updates]");
@@ -473,19 +493,27 @@ const updatesMount = $("[data-updates-list]");
 if (updatesMount) {
   updatesMount.innerHTML = UPDATES.map((item, index) => {
     const project = item.projectId ? MODS.find((mod) => mod.id === item.projectId) : null;
-    return '<article class="journal-entry" data-reveal>' +
+    const hasMedia = Boolean(item.image || item.video);
+    return '<article class="journal-entry ' + (hasMedia ? "has-media" : "editorial-only") + '" data-reveal>' +
       '<div class="journal-num">' + String(index + 1).padStart(2, "0") + '</div>' +
-      '<div class="journal-meta"><time datetime="' + item.date + '">' + item.displayDate + '</time><span>' + item.category + '</span></div>' +
+      '<div class="journal-meta"><time datetime="' + item.date + '">' + item.displayDate + '</time><span>' + item.category + '</span>' + (item.currentPhase ? '<b>' + item.currentPhase + '</b>' : '') + '</div>' +
       '<div class="journal-copy"><h2>' + item.title + '</h2><p>' + item.description + '</p>' +
-      (item.articleUrl ? '<a href="' + item.articleUrl + '">Read full update →</a>' : project ? '<a href="mods/' + project.slug + '.html">Open related project →</a>' : '') +
-      '</div></article>';
+        (project ? '<a href="mods/' + project.slug + '.html">Open ' + getProjectName(project) + ' →</a>' : '') +
+      '</div>' +
+      (hasMedia ? '<div class="journal-media">' + (item.video
+        ? mediaFrame({ video: item.video, poster: item.image || "", alt: item.title })
+        : mediaFrame({ src: item.image, alt: item.title })) + '</div>' : '<div class="journal-wordmark" aria-hidden="true">DEVELOPMENT</div>') +
+    '</article>';
   }).join("");
   wireReveal(updatesMount);
+  wireImages(updatesMount);
+  wireVideos(updatesMount);
 }
 
 const categoryMount = $("[data-category-list]");
+const availableCategories = ["All", ...new Set(MODS.flatMap((mod) => projectCategories(mod)))];
 if (categoryMount) {
-  categoryMount.innerHTML = CATEGORIES.map((category, index) =>
+  categoryMount.innerHTML = availableCategories.map((category, index) =>
     '<button class="filter-chip ' + (index === 0 ? "active" : "") + '" type="button" data-category-filter="' + category + '">' + category + '</button>'
   ).join("");
 }
@@ -495,24 +523,45 @@ if (modGrid) {
   const localSearch = $("[data-mod-search]");
   const sort = $("[data-sort]");
 
+  function singleProjectMarkup(mod) {
+    const milestones = (mod.milestones || []).slice(0, 5).map((item) =>
+      '<div class="library-milestone"><span>' + item.name + '</span>' + systemStateBadge(item.status) + '</div>'
+    ).join("");
+    return '<article class="single-project-feature">' +
+      '<a class="single-project-media" href="mods/' + mod.slug + '.html">' + renderProjectMedia(mod, { showMilestones: true }) + '</a>' +
+      '<div class="single-project-copy"><span class="section-label">' + mod.internalName + '</span><h2>' + getProjectName(mod) + '</h2><p class="single-project-tagline">' + mod.tagline + '</p>' +
+        '<div class="single-project-meta"><span>' + statusBadge(mod.status) + '</span><span><small>Phase</small><b>' + mod.currentPhase + '</b></span><span><small>Category</small><b>' + projectCategoryLabel(mod) + '</b></span></div>' +
+        '<p>' + mod.shortDescription + '</p>' +
+        '<div class="library-milestones">' + milestones + '</div>' +
+        '<a class="button primary" href="mods/' + mod.slug + '.html">View Project <span>→</span></a>' +
+      '</div>' +
+    '</article>' +
+    '<section class="future-projects-note"><div><span class="section-label">Future Torqz Projects</span><h3>New projects appear only when development begins.</h3></div><p>No fake mod cards, placeholder names, or made-up screenshots. The library grows when a real Torqz project is active.</p></section>';
+  }
+
   function renderLibrary() {
     modGrid.classList.add("is-loading");
     const active = $("[data-category-filter].active")?.dataset.categoryFilter || "All";
     const query = localSearch?.value.trim().toLowerCase() || "";
-    let items = MODS.filter((mod) => (active === "All" || mod.category === active) && searchText(mod).includes(query));
+    let items = MODS.filter((mod) => (active === "All" || projectCategories(mod).includes(active)) && searchText(mod).includes(query));
 
     if (sort?.value === "az") items = [...items].sort((a, b) => getProjectName(a).localeCompare(getProjectName(b)));
     if (sort?.value === "updated") items = [...items].sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
     if (sort?.value === "latest") items = [...items].sort((a, b) => (b.releaseDate || b.updatedAt || "").localeCompare(a.releaseDate || a.updatedAt || ""));
 
     requestAnimationFrame(() => {
-      modGrid.innerHTML = items.length
-        ? items.map((mod) => modTile(mod, base)).join("")
-        : '<div class="library-empty"><strong>No matching projects.</strong><span>Try another category or search term.</span></div>';
+      if (!items.length) {
+        modGrid.innerHTML = '<div class="library-empty"><strong>No matching projects.</strong><span>Try another category or search term.</span></div>';
+      } else if (items.length === 1 && MODS.length === 1) {
+        modGrid.innerHTML = singleProjectMarkup(items[0]);
+      } else {
+        modGrid.innerHTML = items.map((mod) => modTile(mod, base)).join("");
+      }
       modGrid.classList.remove("is-loading");
       const count = $("[data-result-count]");
       if (count) count.textContent = items.length + " " + (items.length === 1 ? "project" : "projects");
       wireImages(modGrid);
+      wireVideos(modGrid);
     });
   }
 
@@ -528,18 +577,19 @@ if (modGrid) {
   renderLibrary();
 }
 
-function renderGalleryItem(item, index, mod) {
-  const type = item.type || "image";
-  const src = item.src ? "../" + item.src : "";
-  const poster = item.poster ? "../" + item.poster : "";
-  const fallback = mod.fallbackHero ? "../" + mod.fallbackHero : "";
-  const caption = item.caption || "";
-  if (type === "video") {
-    return '<button type="button" data-gallery-index="' + index + '" data-gallery-type="video" data-gallery-src="' + src + '" data-gallery-poster="' + poster + '" data-gallery-label="' + caption + '">' +
-      mediaFrame({ video: src, poster, fallback, caption, className: "gallery-media", position: item.position || "center" }) + '</button>';
-  }
-  return '<button type="button" data-gallery-index="' + index + '" data-gallery-type="image" data-gallery-src="' + src + '" data-gallery-label="' + caption + '">' +
-    mediaFrame({ src, fallback, alt: item.alt || caption || getProjectName(mod) + " media", caption, className: "gallery-media", position: item.position || "center", srcset: item.srcset || "", sizes: item.sizes || "" }) + '</button>';
+function renderMediaCollection(items, mod) {
+  return items.map((item, index) => {
+    const type = item.type || "image";
+    const src = item.src ? "../" + item.src : "";
+    const poster = item.poster ? "../" + item.poster : "";
+    const caption = item.caption || "";
+    const data = ' data-gallery-index="' + index + '" data-gallery-type="' + type + '" data-gallery-src="' + src + '" data-gallery-poster="' + poster + '" data-gallery-label="' + caption + '"';
+    return '<button type="button" class="media-collection-item"' + data + '>' +
+      (type === "video"
+        ? mediaFrame({ video: src, poster, caption, className: "gallery-media", position: item.position || "center" })
+        : mediaFrame({ src, alt: item.alt || caption || getProjectName(mod) + " media", caption, className: "gallery-media", position: item.position || "center", srcset: item.srcset || "", sizes: item.sizes || "" })) +
+    '</button>';
+  }).join("");
 }
 
 const detail = $("[data-mod-detail]");
@@ -553,30 +603,10 @@ if (detail) {
     const downloadState = resolvedDownloadState(mod);
     const downloadReady = downloadState === "released" && configured(mod.downloadUrl);
     const projectUpdates = updatesForProject(mod.id);
-    const gallery = [
-      ...(mod.heroImage || mod.fallbackHero ? [{
-        type: "image",
-        src: mod.heroImage || mod.fallbackHero,
-        alt: name + " hero media",
-        caption: name + " development preview",
-        position: mod.heroImagePosition || "center"
-      }] : []),
-      ...(mod.gallery || []),
-      ...(mod.videoClips || [])
-    ].filter((item) => item?.src);
-
-    const heroMedia = mediaFrame({
-      src: mod.heroImage ? "../" + mod.heroImage : "",
-      alt: name + " development preview",
-      video: mod.heroVideo ? "../" + mod.heroVideo : "",
-      poster: mod.heroVideoPoster ? "../" + mod.heroVideoPoster : "",
-      fallback: mod.fallbackHero ? "../" + mod.fallbackHero : "",
-      loading: "eager",
-      className: "project-hero-frame",
-      position: mod.heroImagePosition
-    });
-
     const compat = mod.beamngCompatibility || {};
+    const projectMediaItems = mod.projectMedia || [];
+    const developmentMediaItems = mod.developmentMedia || [];
+
     const knownIssuesText = mod.knownIssues?.length
       ? mod.knownIssues.map((issue) => '<article class="issue-row"><div><strong>' + issue.title + '</strong><span>' + displayValue(issue.severity, "Unspecified") + ' · ' + displayValue(issue.status, "Open") + '</span></div><p>' + issue.description + '</p>' + (issue.workaround ? '<small>Workaround: ' + issue.workaround + '</small>' : '') + '</article>').join("")
       : mod.knownIssuesState === "unpublished"
@@ -591,87 +621,78 @@ if (detail) {
           (step.link ? '<a class="project-link" href="' + step.link + '">More information <span>→</span></a>' : '') + '</article>'
         ).join("") + '</div>' +
         (mod.installationPath ? '<div class="path-row"><span>Path</span><code>' + mod.installationPath + '</code><button type="button" data-copy-path data-copy-value="' + mod.installationPath.replace(/"/g, "&quot;") + '">Copy</button></div>' : "")
-      : '<div class="pending-panel"><span>Installation</span><strong>Coming Soon</strong><p>Project-specific installation steps will appear here once the real installation method is verified.</p></div>';
-
-    const releaseMeta = downloadReady
-      ? '<div><small>Release Date</small><strong>' + displayValue(mod.releaseDate) + '</strong></div>'
-      : '<div><small>Release</small><strong>' + downloadLabel(downloadState) + '</strong></div>';
+      : '<div class="pending-panel"><span>Installation</span><strong>Not Published Yet</strong><p>Project-specific installation steps will appear here once Torqz Garage has a verified release method.</p></div>';
 
     detail.innerHTML =
-      '<section class="project-hero"><div class="project-hero-media">' + heroMedia + '<div class="project-hero-shade"></div>' +
-        '<div class="project-hero-copy"><span>' + getProjectLabel(mod) + '</span>' +
-          (mod.publicName ? '<small class="project-dev-id">' + mod.internalName + '</small>' : '') +
-          '<h1>' + name + '</h1>' +
-          (mod.tagline ? '<h2 class="project-tagline">' + mod.tagline + '</h2>' : '') +
-          '<p>' + (mod.shortDescription || mod.fullDescription) + '</p>' +
+      '<section class="project-hero garage-project-hero"><div class="project-hero-media">' +
+        renderProjectMedia(mod, { nested: true, loading: "eager", showMilestones: true }) +
+        '<div class="project-hero-shade"></div>' +
+        '<div class="project-hero-copy"><span>' + getProjectLabel(mod) + '</span><small class="project-dev-id">' + mod.internalName + '</small><h1>' + name + '</h1>' +
+          '<h2 class="project-tagline">' + mod.tagline + '</h2><p>' + mod.shortDescription + '</p>' +
           '<div class="project-hero-actions">' +
-            (downloadReady
-              ? '<a class="button primary" href="' + mod.downloadUrl + '">Download <span>→</span></a>'
-              : '<span class="release-state">' + downloadLabel(downloadState) + '</span>') +
-            '<a class="button ghost" href="#project-information">Installation / Information</a>' +
+            (downloadReady ? '<a class="button primary" href="' + mod.downloadUrl + '">Download <span>→</span></a>' : '<span class="release-state">' + downloadLabel(downloadState) + '</span>') +
+            '<a class="button ghost" href="#project-overview">View Development</a>' +
           '</div>' +
         '</div>' +
-        '<div class="project-hero-status"><small>Current status</small>' + statusBadge(mod.status) + '</div>' +
+        '<div class="project-hero-status"><small>Current phase</small><strong>' + mod.currentPhase + '</strong>' + statusBadge(mod.status) + '</div>' +
       '</div></section>' +
 
-      '<section class="project-info-rail" id="project-information">' +
-        '<div><small>Version</small><strong>' + displayValue(mod.version) + '</strong></div>' +
-        '<div><small>BeamNG Version</small><strong>' + displayValue(compat.testedVersion) + '</strong></div>' +
-        '<div><small>File Size</small><strong>' + displayValue(mod.fileSize) + '</strong></div>' +
-        releaseMeta +
-        '<div><small>Current Phase</small><strong>' + displayValue(mod.currentPhase, "Not published") + '</strong></div>' +
+      '<section class="project-info-rail" id="project-overview">' +
+        '<div><small>Internal ID</small><strong>' + mod.internalName + '</strong></div>' +
+        '<div><small>Status</small><strong>' + mod.status + '</strong></div>' +
+        '<div><small>Current Phase</small><strong>' + mod.currentPhase + '</strong></div>' +
+        '<div><small>Category</small><strong>' + projectCategoryLabel(mod) + '</strong></div>' +
+        '<div><small>Release</small><strong>' + downloadLabel(downloadState) + '</strong></div>' +
       '</section>' +
 
-      (gallery.length ? '<section class="project-section project-gallery-section"><div class="project-section-head"><span>Media / 01</span><h2>Project gallery</h2><p>Images and clips are data-driven so real Project 01 media can replace placeholders without changing the layout.</p></div><div class="project-gallery" data-gallery>' +
-        '<div class="gallery-primary">' + renderGalleryItem(gallery[0], 0, mod) + '</div>' +
-        (gallery.length > 1 ? '<div class="gallery-secondary">' + gallery.slice(1, 5).map((item, index) => renderGalleryItem(item, index + 1, mod)).join("") + '</div>' : '') +
-      '</div></section>' : '') +
-
-      '<section class="project-section editorial-about"><div class="project-section-head"><span>Overview / 02</span><h2>About this project</h2></div><div class="editorial-copy"><p>' + (mod.fullDescription || mod.shortDescription) + '</p>' +
-        (mod.featureSummary ? '<p class="feature-summary">' + mod.featureSummary + '</p>' : '') +
-        (mod.technicalDescription ? '<div class="technical-copy"><h3>Technical details</h3><p>' + mod.technicalDescription + '</p></div>' : '') +
-        (mod.features?.length ? '<div class="feature-rows">' + mod.features.map((feature, index) => '<div class="feature-row"><span>' + String(index + 1).padStart(2, "0") + '</span><div><h3>' + feature.title + '</h3><p>' + feature.description + '</p></div></div>').join("") + '</div>' : '') +
+      '<section class="project-section editorial-about depth-section"><div class="project-section-head"><span>Overview</span><h2>Persistent ownership, built for BeamNG.</h2></div><div class="editorial-copy"><p>' + mod.fullDescription + '</p><p class="feature-summary">' + mod.featureSummary + '</p>' +
+        (mod.technicalDescription ? '<div class="technical-copy"><h3>Current development focus</h3><p>' + mod.technicalDescription + '</p></div>' : '') +
       '</div></section>' +
 
-      (mod.milestones?.length ? '<section class="project-section"><div class="project-section-head"><span>Development / 03</span><h2>Project development</h2><p>Milestones are shown only when they are explicitly configured in project data.</p></div><div class="milestone-rail">' +
-        mod.milestones.map((item, index) => '<div class="milestone ' + String(item.status).toLowerCase().replace(/[^a-z0-9]+/g, "-") + '"><span aria-hidden="true"></span><b>' + String(index + 1).padStart(2, "0") + '</b><strong>' + item.name + '</strong><small>' + item.status + '</small></div>').join("") +
+      (mod.milestones?.length ? '<section class="project-section depth-section background-word" data-background-word="PROJECT 01"><div class="project-section-head"><span>Current Status</span><h2>Development milestones</h2><p>No percentages or guessed progress — every state comes directly from Project 01 data.</p></div><div class="milestone-rail">' +
+        mod.milestones.map((item, index) => '<div class="milestone ' + String(item.status).replace(/[^a-z0-9]+/gi, "-") + '"><span aria-hidden="true"></span><b>' + String(index + 1).padStart(2, "0") + '</b><strong>' + item.name + '</strong>' + systemStateBadge(item.status) + '</div>').join("") +
       '</div></section>' : '') +
 
-      (projectUpdates.length ? '<section class="project-section"><div class="project-section-head"><span>Updates / 04</span><h2>Development updates</h2><p>Project-linked updates are shared with the Torqz Updates page automatically.</p></div><div class="project-update-list">' +
-        projectUpdates.map((item, index) => updateMarkup(item, index, "../")).join("") +
+      (mod.liveSystems?.length ? '<section class="project-section systems-section"><div class="project-section-head"><span>Vehicle Data</span><h2>Live vehicle systems</h2><p>Current and planned data systems are separated clearly so active development is not confused with finished functionality.</p></div><div class="systems-grid">' +
+        mod.liveSystems.map((system) => '<article class="system-card"><div><h3>' + system.name + '</h3>' + systemStateBadge(system.status) + '</div><p>' + system.description + '</p></article>').join("") +
       '</div></section>' : '') +
 
-      '<section class="project-section install-section"><div class="project-section-head"><span>Setup / 05</span><h2>Installation</h2><p>Instructions are project-specific and only appear once the real method is known.</p></div>' +
-      (mod.installationWarning ? '<div class="install-warning project-install-warning">' + mod.installationWarning + '</div>' : '') +
-      installHtml +
-      (mod.installationNotes || mod.installationNote ? '<div class="project-notes"><strong>Installation notes</strong><p>' + (mod.installationNotes || mod.installationNote) + '</p></div>' : '') +
-      '</section>' +
+      (mod.plannedFeatures?.length ? '<section class="project-section depth-section"><div class="project-section-head"><span>Roadmap</span><h2>Planned features</h2><p>These are development targets, not claims about current functionality.</p></div><div class="planned-feature-list">' +
+        mod.plannedFeatures.map((feature, index) => '<div><span>' + String(index + 1).padStart(2, "0") + '</span><strong>' + feature + '</strong><b>Planned</b></div>').join("") +
+      '</div></section>' : '') +
 
-      '<section class="project-section compatibility-section"><div class="compatibility-copy"><span>Compatibility / 06</span><h2>Compatibility</h2>' + statusBadge(mod.status) + '</div><div class="compatibility-lines">' +
+      (projectUpdates.length ? '<section class="project-section"><div class="project-section-head"><span>Development Log</span><h2>Recent development</h2><p>Real Project 01 entries are shared automatically with the Torqz Updates page.</p></div><div class="project-update-list">' +
+        projectUpdates.map((item, index) => updateMarkup(item, index, "../", "project-update-row")).join("") +
+      '</div></section>' : '') +
+
+      (projectMediaItems.length ? '<section class="project-section project-gallery-section"><div class="project-section-head"><span>Project Media</span><h2>Torqz Garage media</h2><p>Final project screenshots and release media live here when they exist.</p></div><div class="media-collection">' + renderMediaCollection(projectMediaItems, mod) + '</div></section>' : '') +
+
+      (developmentMediaItems.length ? '<section class="project-section project-gallery-section depth-section"><div class="project-section-head"><span>Development Media</span><h2>Behind the build</h2><p>Console output, telemetry tests, code screenshots, gameplay tests, and short clips can document real development without pretending to be release media.</p></div><div class="media-collection">' + renderMediaCollection(developmentMediaItems, mod) + '</div></section>' : '') +
+
+      '<section class="project-section install-section"><div class="project-section-head"><span>Installation</span><h2>Release setup</h2><p>Installation information appears only after the real release method is verified.</p></div>' + installHtml + '</section>' +
+
+      '<section class="project-section compatibility-section depth-section"><div class="compatibility-copy"><span>Compatibility</span><h2>BeamNG support</h2>' + statusBadge(mod.status) + '</div><div class="compatibility-lines">' +
         '<div><span>Tested BeamNG Version</span><b>' + displayValue(compat.testedVersion) + '</b></div>' +
         '<div><span>Minimum Version</span><b>' + displayValue(compat.minimumVersion) + '</b></div>' +
-        (compat.notes || mod.compatibilityNotes ? '<div><span>Notes</span><b>' + (compat.notes || mod.compatibilityNotes) + '</b></div>' : '') +
+        '<div><span>Version</span><b>' + displayValue(mod.version) + '</b></div>' +
+        '<div><span>File Size</span><b>' + displayValue(mod.fileSize) + '</b></div>' +
         '<div><span>Download State</span><b>' + downloadLabel(downloadState) + '</b></div>' +
       '</div></section>' +
 
-      (knownIssuesText ? '<section class="project-section"><div class="project-section-head"><span>Issues / 07</span><h2>Known issues</h2><p>Only actual configured issues are listed.</p></div><div class="known-issues">' + knownIssuesText + '</div></section>' : '') +
+      (knownIssuesText ? '<section class="project-section"><div class="project-section-head"><span>Known Issues</span><h2>Published issues</h2><p>Only issues explicitly added to project data are shown.</p></div><div class="known-issues">' + knownIssuesText + '</div></section>' : '') +
 
-      (mod.releaseNotes ? '<section class="project-section"><div class="project-section-head"><span>Release / 08</span><h2>Release notes</h2></div><div class="project-notes"><p>' + mod.releaseNotes + '</p></div></section>' : '') +
-      (mod.changelog?.length ? '<section class="project-section changelog-section"><div class="project-section-head"><span>History / 08</span><h2>' + (downloadReady ? "Changelog" : "Development history") + '</h2></div><div class="changelog-list">' +
+      (mod.changelog?.length ? '<section class="project-section changelog-section depth-section"><div class="project-section-head"><span>Development History</span><h2>' + (downloadReady ? "Changelog" : "Development changelog") + '</h2></div><div class="changelog-list">' +
         mod.changelog.map((entry, index) => '<article class="changelog-item ' + (index === 0 ? "open" : "") + '"><button type="button" data-changelog-toggle aria-expanded="' + (index === 0 ? "true" : "false") + '"><span><strong>' + entry.version + '</strong><small>' + displayValue(entry.date, "Current development") + '</small></span><b aria-hidden="true">' + (index === 0 ? "−" : "+") + '</b></button><div class="changelog-body"><div>' +
           Object.entries(entry.groups || {}).filter(([, items]) => items?.length).map(([label, items]) => '<section><h3>' + label + '</h3><ul>' + items.map((item) => '<li>' + item + '</li>').join("") + '</ul></section>').join("") +
         '</div></div></article>').join("") +
       '</div></section>' : '') +
 
-      (mod.credits?.length ? '<section class="project-section credits-section"><div><span>Credits / 09</span><h2>Project credits</h2></div><div>' + mod.credits.map((credit) => '<strong>' + credit + '</strong>').join("") + '</div></section>' : '') +
-
-      (MODS.some((item) => item.slug !== mod.slug) ? '<section class="project-section"><div class="project-section-head"><span>More / 10</span><h2>More from Torqz</h2></div><div class="mod-grid">' + MODS.filter((item) => item.slug !== mod.slug).map((item) => modTile(item, "../")).join("") + '</div></section>' : '');
+      (mod.credits?.length ? '<section class="project-section credits-section"><div><span>Credits</span><h2>Project credits</h2></div><div>' + mod.credits.map((credit) => '<strong>' + credit + '</strong>').join("") + '</div></section>' : '');
 
     wireImages(detail);
     wireVideos(detail);
     wireReveal(detail);
     bindPlaceholderLinks(detail);
-    wireConfiguredActions(detail);
   }
 }
 
@@ -760,26 +781,18 @@ document.addEventListener("click", async (event) => {
     await navigator.clipboard.writeText(value);
     const old = button.textContent;
     button.textContent = "Copied";
-    setTimeout(() => (button.textContent = old), 1600);
+    setTimeout(() => (button.textContent = old), 1500);
   } catch {
     toast("Copy failed — select the path manually.");
   }
 });
 
-$("[data-discord-link]").forEach((node) => {
+$$("[data-discord-link]").forEach((node) => {
   const url = configured(SITE_CONFIG.discordUrl);
-  const card = node.closest("[data-service-card]");
-  const state = card?.querySelector("[data-service-state]");
-  if (url) {
-    card?.classList.add("is-available");
-    if (state) state.textContent = "External";
-    const trailing = node.querySelector("span");
-    if (trailing) trailing.textContent = "Open ↗";
-  }
   node.addEventListener("click", (event) => {
     event.preventDefault();
     if (url) window.open(url, "_blank", "noopener,noreferrer");
-    else toast("Discord support is coming soon. The official invite has not been configured yet.");
+    else toast("Discord is not published yet.");
   });
 });
 
@@ -798,5 +811,5 @@ document.addEventListener("click", (event) => {
   if (url.origin !== location.origin || (url.hash && url.pathname === location.pathname)) return;
   event.preventDefault();
   document.body.classList.add("page-leaving");
-  setTimeout(() => { location.href = link.href; }, 150);
+  setTimeout(() => { location.href = link.href; }, 140);
 });

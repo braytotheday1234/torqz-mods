@@ -1,17 +1,21 @@
-# Project 01 media
+# Torqz Garage / Project 01 media
 
-This directory currently contains intentional development placeholders.
+V6 no longer uses the old fake vehicle silhouette as the main placeholder.
 
-When real Project 01 media is ready, add optimized assets here and update `js/mods.js`.
+Until real screenshots exist, the public site renders a branded, data-driven Torqz Garage development graphic.
 
-Recommended patterns:
+When real media is ready, add optimized files here and reference them from `js/mods.js`.
+
+Recommended examples:
 
 - `hero.webp` or `hero.avif`
-- `thumbnail.webp`
-- `gallery-01.webp`
-- `gallery-02.webp`
-- `gallery-03.webp`
-- `demo.webm`
-- `demo-poster.webp`
+- `project-01.webp`
+- `telemetry-test.webp`
+- `console-test.webp`
+- `vs-code-development.webp`
+- `vehicle-data-test.webm`
+- `vehicle-data-poster.webp`
 
-Not every file is required. The project data decides which media exists, and the site falls back to intentional Torqz development media rather than showing a broken image.
+Use `projectMedia` for polished project-facing screenshots and `developmentMedia` for real console, code, telemetry, and testing captures.
+
+The website will not invent media when these arrays are empty.
