@@ -1,97 +1,87 @@
 import { SITE_CONFIG, configured } from "./config.js";
-import { displayValue, getProjectName } from "./mods.js";
-
-const icon = (name) => ({
-  search: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.4-4.4m2.4-5.1A7.5 7.5 0 1 1 4 11.5a7.5 7.5 0 0 1 15 0Z"/></svg>',
-  arrow: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>'
-}[name] || "");
+import { displayValue, getProjectName, projectCategoryLabel } from "./mods.js";
 
 const root = () => document.body.dataset.root || "";
 const href = (path) => root() + path;
 const logo = () => href("assets/brand/torqz-logo.webp");
 
+const icons = {
+  search: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.2-4.2m2.2-5.3A7.5 7.5 0 1 1 4 11.5a7.5 7.5 0 0 1 15 0Z"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>',
+  odometer: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17a8 8 0 1 1 16 0M12 12l4-4M7 17h10"/></svg>',
+  car: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 14 2-5h12l2 5M5 14h14v5H5zM7 19v2m10-2v2M8 14h.01M16 14h.01"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg>',
+  garage: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 10 8-5 8 5v10H4zM7 13h10v7H7z"/></svg>',
+  wrench: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 6a5 5 0 0 0-6 6L3 17l4 4 5-5a5 5 0 0 0 6-6l-3 3-4-4z"/></svg>',
+  bug: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7V5m6 2V5M7 10H4m16 0h-3M7 14H4m16 0h-3M9 18v2m6-2v2M8 8h8v10H8z"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  help: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.5 2.5 0 0 1 4.7 1.2c0 1.8-2.4 2.2-2.4 3.8m0 3h.01"/></svg>',
+  download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10m-4-4 4 4 4-4M5 19h14"/></svg>'
+};
+export const icon = (name) => icons[name] || "";
+
 export function statusClass(status) {
   return "status-" + String(status || "unknown").toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
-
-export function statusBadge(status) {
-  return '<span class="status-badge casual-status ' + statusClass(status) + '">' + displayValue(status, "TBD") + '</span>';
+export function statusBadge(status, tiny = false) {
+  return '<span class="status-badge ' + statusClass(status) + (tiny ? " tiny" : "") + '">' + displayValue(status, "TBD") + '</span>';
+}
+export function button(label, url, type = "primary", extra = "") {
+  return '<a class="button ' + type + '" href="' + url + '" ' + extra + '>' + label + '<span>→</span></a>';
+}
+export function sectionTitle(label, title, text = "") {
+  return '<div class="section-title"><span>' + label + '</span><h2>' + title + '</h2>' + (text ? '<p>' + text + '</p>' : '') + '</div>';
 }
 
-export function projectVisual(mod, options = {}) {
-  const prefix = options.nested ? "../" : "";
-  if (mod.heroVideo) {
-    return '<div class="project-visual-media"><video muted loop playsinline preload="none" ' +
-      (mod.heroVideoPoster ? 'poster="' + prefix + mod.heroVideoPoster + '" ' : '') +
-      'data-lazy-video><source data-src="' + prefix + mod.heroVideo + '" type="' +
-      (mod.heroVideo.toLowerCase().endsWith(".webm") ? "video/webm" : "video/mp4") +
-      '"></video></div>';
-  }
-  if (mod.heroImage) {
-    return '<div class="project-visual-media"><img src="' + prefix + mod.heroImage + '" alt="' + getProjectName(mod) + ' project preview" loading="' + (options.eager ? "eager" : "lazy") + '" decoding="async" data-fade-image></div>';
-  }
-
-  return '<div class="project-visual-brand">' +
-    '<div class="project-visual-glow" aria-hidden="true"></div>' +
-    '<img src="' + prefix + 'assets/brand/torqz-logo.webp" alt="" aria-hidden="true" width="180" height="180">' +
-    '<div class="project-visual-copy"><span>' + mod.internalName + '</span><strong>' + getProjectName(mod) + '</strong><small>' + (mod.subtitle || mod.tagline || "") + '</small></div>' +
-    statusBadge(mod.status) +
-  '</div>';
-}
-
-function navLinks(active) {
-  const items = [
-    ["home", "index.html", "Home"],
-    ["mods", "mods.html", "Mods"],
-    ["updates", "updates.html", "Updates"],
-    ["about", "about.html", "About"],
-    ["support", "support.html", "Support"]
-  ];
-  return items.map(([key, path, label]) =>
-    '<a class="' + (active === key ? "active" : "") + '" href="' + href(path) + '"' +
-    (active === key ? ' aria-current="page"' : '') + '>' + label + '</a>'
-  ).join("");
-}
-
-function socialItem(label, url) {
-  const value = configured(url);
-  return value
-    ? '<a href="' + value + '" target="_blank" rel="noopener noreferrer">' + label + '<span>↗</span></a>'
-    : '<span class="footer-social-muted">' + label + '<small>Coming Soon</small></span>';
+function socialLink(label, url) {
+  const target = configured(url);
+  return target
+    ? '<a href="' + target + '" target="_blank" rel="noopener noreferrer">' + label + '</a>'
+    : '<span>' + label + '<small>Coming soon</small></span>';
 }
 
 export function mountHeader(active = "") {
   const target = document.querySelector("[data-site-header]");
   if (!target) return;
+  const links = [
+    ["home","index.html","Home"],
+    ["mods","mods.html","Mods"],
+    ["updates","updates.html","Updates"],
+    ["about","about.html","About"],
+    ["support","support.html","Support"]
+  ];
+  const nav = links.map(([key,path,label]) =>
+    '<a class="' + (active===key ? "active" : "") + '" href="' + href(path) + '"' + (active===key ? ' aria-current="page"' : '') + '>' + label + '</a>'
+  ).join("");
   const discord = configured(SITE_CONFIG.discordUrl);
-  const links = navLinks(active);
 
   target.innerHTML =
     '<a class="skip-link" href="#main-content">Skip to content</a>' +
-    '<header class="site-header" data-header>' +
-      '<div class="wide-shell nav-shell">' +
-        '<a class="brand brand-logo" href="' + href("index.html") + '" aria-label="Torqz Mods home"><img src="' + logo() + '" alt="Torqz Mods" width="44" height="44"></a>' +
-        '<nav class="desktop-nav" aria-label="Primary navigation">' + links + '</nav>' +
-        '<div class="nav-actions">' +
-          '<button class="nav-search" type="button" data-search-trigger aria-label="Search Torqz Mods">' + icon("search") + '<span>Search</span><kbd data-search-shortcut>Ctrl K</kbd></button>' +
-          (discord
-            ? '<a class="nav-discord" href="' + discord + '" target="_blank" rel="noopener noreferrer">Discord ' + icon("arrow") + '</a>'
-            : '<button class="nav-discord coming" type="button" data-placeholder-link><span>Discord</span><small>Coming Soon</small></button>') +
-          '<button class="menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="mobile-menu" aria-label="Open navigation"><i></i><i></i></button>' +
-        '</div>' +
+    '<header class="site-header" data-header><div class="site-shell nav-shell">' +
+      '<a class="brand" href="' + href("index.html") + '" aria-label="Torqz Mods home">' +
+        '<img src="' + logo() + '" alt="Torqz Mods" width="44" height="44">' +
+        '<span><strong>TORQZ</strong><small>MODS</small></span>' +
+      '</a>' +
+      '<nav class="desktop-nav" aria-label="Primary navigation">' + nav + '</nav>' +
+      '<div class="nav-actions">' +
+        '<button class="search-trigger" type="button" data-search-trigger>' + icon("search") + '<span>Search</span><kbd data-search-shortcut>Ctrl K</kbd></button>' +
+        (discord
+          ? '<a class="discord-link" href="' + discord + '" target="_blank" rel="noopener noreferrer">Discord</a>'
+          : '<button class="discord-link soon" type="button" data-placeholder-link>Discord <small>Soon</small></button>') +
+        '<button class="menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu"><i></i><i></i></button>' +
       '</div>' +
-      '<nav class="mobile-nav" id="mobile-menu" data-mobile-nav aria-label="Mobile navigation" aria-hidden="true">' +
-        '<div class="mobile-nav-head"><img src="' + logo() + '" alt="Torqz Mods" width="44" height="44"><button type="button" data-menu-close aria-label="Close navigation">×</button></div>' +
-        '<div class="mobile-nav-links">' + links + '</div>' +
-        (discord ? '<a class="mobile-discord" href="' + discord + '" target="_blank" rel="noopener noreferrer">Discord ↗</a>' : '<div class="mobile-discord coming"><span>Discord</span><small>Coming Soon</small></div>') +
-      '</nav>' +
-    '</header>' +
-    '<div class="command-search" data-search-overlay aria-hidden="true">' +
-      '<button class="command-backdrop" type="button" data-search-close aria-label="Close search"></button>' +
-      '<section class="command-panel" role="dialog" aria-modal="true" aria-labelledby="search-dialog-title" tabindex="-1" data-search-dialog>' +
-        '<div class="command-head"><span id="search-dialog-title">Search Torqz Mods</span><div><kbd>↑↓</kbd><span>Navigate</span><kbd>Enter</kbd><span>Open</span><kbd>Esc</kbd><span>Close</span></div></div>' +
-        '<label class="command-input">' + icon("search") + '<span class="sr-only">Search projects</span><input type="search" autocomplete="off" placeholder="Search Torqz Garage…" data-global-search></label>' +
-        '<div class="command-results" data-search-results aria-live="polite"></div>' +
+    '</div><nav class="mobile-nav" id="mobile-menu" data-mobile-nav aria-hidden="true">' +
+      '<div class="mobile-nav-head"><div class="brand mini"><img src="' + logo() + '" alt="Torqz Mods"><span><strong>TORQZ</strong><small>MODS</small></span></div><button type="button" data-menu-close aria-label="Close menu">×</button></div>' +
+      '<div class="mobile-nav-links">' + nav + '</div>' +
+      (discord ? '<a class="mobile-discord" href="' + discord + '" target="_blank" rel="noopener noreferrer">Discord ↗</a>' : '<div class="mobile-discord muted">Discord <small>Coming soon</small></div>') +
+    '</nav></header>' +
+    '<div class="search-modal" data-search-overlay aria-hidden="true">' +
+      '<button class="search-backdrop" type="button" data-search-close aria-label="Close search"></button>' +
+      '<section class="search-panel" role="dialog" aria-modal="true" aria-labelledby="search-title" tabindex="-1" data-search-dialog>' +
+        '<div class="search-head"><div><span>Quick Search</span><strong id="search-title">Find a Torqz project</strong></div><button type="button" data-search-close aria-label="Close search">×</button></div>' +
+        '<label class="search-field">' + icon("search") + '<input type="search" autocomplete="off" placeholder="Search Torqz Garage…" data-global-search></label>' +
+        '<div class="search-results" data-search-results aria-live="polite"></div>' +
+        '<div class="search-hint"><span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>Enter</kbd> open</span><span><kbd>Esc</kbd> close</span></div>' +
       '</section>' +
     '</div>';
 }
@@ -100,32 +90,75 @@ export function mountFooter() {
   const target = document.querySelector("[data-site-footer]");
   if (!target) return;
   target.innerHTML =
-    '<footer class="site-footer simple-footer">' +
-      '<div class="wide-shell footer-top">' +
-        '<div class="footer-lockup">' +
-          '<img class="footer-brand-logo" src="' + logo() + '" alt="Torqz Mods" width="96" height="96">' +
-          '<div><strong>TORQZ MODS</strong><p>BeamNG.drive mods made by a small independent creator project.</p></div>' +
-        '</div>' +
-        '<div class="footer-columns">' +
-          '<div><h2>Projects</h2><a href="' + href("mods.html") + '">Mods</a><a href="' + href("updates.html") + '">Updates</a><a href="' + href("mods/project-01.html") + '">Torqz Garage</a></div>' +
-          '<div><h2>Torqz</h2><a href="' + href("about.html") + '">About</a><a href="' + href("support.html") + '">Support</a><a href="' + href("install.html") + '">Installation</a></div>' +
-          '<div><h2>Community</h2>' + socialItem("Discord", SITE_CONFIG.discordUrl) + socialItem("YouTube", SITE_CONFIG.youtubeUrl) + socialItem("TikTok", SITE_CONFIG.tiktokUrl) + '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="wide-shell footer-bottom"><span>© <span data-year></span> Torqz Mods</span><span>Not affiliated with BeamNG GmbH.</span></div>' +
-    '</footer>' +
+    '<footer class="site-footer"><div class="site-shell footer-main">' +
+      '<div class="footer-brand"><img src="' + logo() + '" alt="Torqz Mods" width="76" height="76"><div><strong>TORQZ MODS</strong><p>Original BeamNG.drive projects.</p></div></div>' +
+      '<div class="footer-nav"><a href="' + href("mods.html") + '">Mods</a><a href="' + href("updates.html") + '">Updates</a><a href="' + href("about.html") + '">About</a><a href="' + href("support.html") + '">Support</a></div>' +
+      '<div class="footer-socials">' + socialLink("Discord",SITE_CONFIG.discordUrl) + socialLink("YouTube",SITE_CONFIG.youtubeUrl) + socialLink("TikTok",SITE_CONFIG.tiktokUrl) + '</div>' +
+    '</div><div class="site-shell footer-bottom"><span>© <span data-year></span> Torqz Mods</span><span>Torqz Mods is not affiliated with BeamNG GmbH.</span></div></footer>' +
     '<div class="toast" data-toast role="status" aria-live="polite"></div>' +
     '<div class="lightbox" data-lightbox aria-hidden="true" role="dialog" aria-modal="true" aria-label="Project media viewer" tabindex="-1">' +
+      '<button class="lightbox-close" type="button" data-lightbox-close aria-label="Close media">×</button>' +
       '<button class="lightbox-prev" type="button" data-lightbox-prev aria-label="Previous media">←</button>' +
-      '<button class="lightbox-close" type="button" data-lightbox-close aria-label="Close media viewer">×</button>' +
+      '<div class="lightbox-stage" data-lightbox-stage></div>' +
       '<button class="lightbox-next" type="button" data-lightbox-next aria-label="Next media">→</button>' +
-      '<div class="lightbox-stage" data-lightbox-stage></div><span data-lightbox-label></span>' +
+      '<span data-lightbox-label></span>' +
     '</div>';
 }
 
-export function modTile(mod, base = "") {
-  return '<article class="project-tile casual-project-card">' +
-    '<a class="project-media casual-card-media" href="' + base + 'mods/' + mod.slug + '.html">' + projectVisual(mod) + '</a>' +
-    '<div class="project-copy"><div class="project-card-top">' + statusBadge(mod.status) + '</div><h3><a href="' + base + 'mods/' + mod.slug + '.html">' + getProjectName(mod) + '</a></h3><p>' + mod.shortDescription + '</p><a class="project-link" href="' + base + 'mods/' + mod.slug + '.html">View Project <span>→</span></a></div>' +
+export function automotiveArtwork(mod, nested = false, compact = false) {
+  const prefix = nested ? "../" : "";
+  return '<div class="automotive-art ' + (compact ? "compact" : "") + '">' +
+    '<div class="garage-light light-a"></div><div class="garage-light light-b"></div>' +
+    '<div class="speed-arc arc-a"></div><div class="speed-arc arc-b"></div>' +
+    '<div class="road-lines"></div>' +
+    '<svg class="car-outline" viewBox="0 0 800 360" aria-hidden="true"><path d="M83 236c38-3 56-23 82-59 25-34 52-56 98-65 63-13 174-17 250-4 48 8 84 28 120 61 20 18 31 33 54 41l43 9-1 34-36 7c-14 42-48 65-91 65-44 0-78-23-92-63H273c-14 40-48 63-92 63-44 0-78-24-92-65l-37-7 4-37z"/><path d="M247 115c28-49 58-68 113-76 57-8 129-4 184 11 39 10 68 32 100 70"/></svg>' +
+    '<div class="art-copy"><span>' + mod.internalName + '</span><strong>' + getProjectName(mod) + '</strong><p>' + (mod.subtitle || mod.tagline || "") + '</p></div>' +
+    '<div class="art-badge">' + statusBadge(mod.status,true) + '</div>' +
+    '<div class="art-data"><span>BeamNG.drive</span><span>Creator build</span><span>Visual placeholder</span></div>' +
+  '</div>';
+}
+
+export function projectMedia(mod, nested = false, compact = false) {
+  const prefix = nested ? "../" : "";
+  if (mod.heroVideo) {
+    return '<div class="project-media-frame"><video muted loop playsinline preload="none" ' +
+      (mod.heroVideoPoster ? 'poster="' + prefix + mod.heroVideoPoster + '"' : '') +
+      ' data-lazy-video><source data-src="' + prefix + mod.heroVideo + '" type="' + (mod.heroVideo.endsWith(".webm")?"video/webm":"video/mp4") + '"></video></div>';
+  }
+  if (mod.heroImage) {
+    return '<div class="project-media-frame"><img src="' + prefix + mod.heroImage + '" alt="' + getProjectName(mod) + ' project media" loading="lazy" decoding="async"></div>';
+  }
+  return automotiveArtwork(mod,nested,compact);
+}
+
+export function projectCard(mod, base = "") {
+  return '<article class="project-card">' +
+    '<a class="project-card-media" href="' + base + 'mods/' + mod.slug + '.html">' + projectMedia(mod,false,true) + '</a>' +
+    '<div class="project-card-body"><div class="project-card-meta"><span>' + projectCategoryLabel(mod) + '</span>' + statusBadge(mod.status,true) + '</div>' +
+    '<h3><a href="' + base + 'mods/' + mod.slug + '.html">' + getProjectName(mod) + '</a></h3><p>' + mod.subtitle + '</p><a class="text-link" href="' + base + 'mods/' + mod.slug + '.html">View Project <span>→</span></a></div>' +
+  '</article>';
+}
+
+export function featureCard(feature, index = 0) {
+  const names=["odometer","car","clock","garage","wrench","car"];
+  return '<article class="feature-card"><div class="feature-icon">' + icon(names[index % names.length]) + '</div><div><h3>' + feature.title + '</h3><p>' + feature.description + '</p></div><span class="feature-state ' + statusClass(feature.status) + '">' +
+    ({complete:"Working","in-progress":"In development",planned:"Planned"}[feature.status] || feature.status) +
+  '</span></article>';
+}
+
+export function updateCard(update, project = null, prefix = "") {
+  return '<article class="update-card">' +
+    '<div class="update-card-date"><span>' + update.displayDate + '</span></div>' +
+    '<div class="update-card-copy"><span class="update-eyebrow">' + (project ? getProjectName(project) : "Torqz Mods") + '</span><h3>' + update.title + '</h3><p>' + update.description + '</p>' +
+      (project ? '<a class="text-link" href="' + prefix + 'mods/' + project.slug + '.html">Read Update <span>→</span></a>' : '') +
+    '</div>' +
+    (update.image ? '<div class="update-card-media"><img src="' + prefix + update.image + '" alt="' + update.title + '" loading="lazy"></div>' : '<div class="update-card-accent" aria-hidden="true"></div>') +
+  '</article>';
+}
+
+export function supportCard(iconName,title,text,status,actionHtml="") {
+  return '<article class="support-card"><div class="support-icon">' + icon(iconName) + '</div><h3>' + title + '</h3><p>' + text + '</p>' +
+    (status ? '<span class="support-state ' + (status.toLowerCase().includes("soon") ? "muted" : "") + '">' + status + '</span>' : '') +
+    actionHtml +
   '</article>';
 }
