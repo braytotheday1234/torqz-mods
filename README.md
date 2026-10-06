@@ -1,32 +1,42 @@
-# Torqz Mods
+# Torqz Mods V3
 
-Production-oriented static website for the Torqz Mods BeamNG.drive modding brand.
+Major visual redesign of the Torqz Mods BeamNG.drive website.
 
-## Architecture
+## What changed
 
-- `index.html` — homepage
-- `mods.html` — searchable/filterable mod library
-- `mods/project-01.html` — data-driven mod detail page
-- `about.html` — brand/about page
-- `support.html` — support hub and FAQ
-- `install.html` — installation guide
-- `updates.html` — development/release log
-- `js/config.js` — centralized site/social/support configuration
-- `js/mods.js` — reusable mod data source
-- `js/components.js` — shared header/footer/mod-card rendering
-- `js/main.js` — interactions and page behavior
-- `css/main.css` — responsive design system
+V3 keeps the existing data-driven/static GitHub Pages architecture, but substantially rebuilds the visual system and page composition.
+
+- Cinematic 80–95vh homepage hero
+- Large featured-project reveal
+- Media-dominant project tiles
+- Editorial philosophy and updates sections
+- Data-driven development journal
+- Command-style search with Ctrl/Cmd+K, slash, arrow-key navigation, Enter, and Escape
+- Search result thumbnails, status, category, and version
+- Search/filter/sort mod library
+- Cinematic data-driven project detail page
+- Lightbox gallery
+- Four-step installation presentation
+- Dedicated compatibility state
+- Expandable changelog
+- Fully reworked About and Support pages
+- Responsive mobile layouts
+- Centralized site links in js/config.js
+- Centralized mod data in js/mods.js
+- Centralized update data in js/updates.js
 
 ## Configuration
 
-Edit `js/config.js` to add real Discord, TikTok, YouTube, support, bug-report, suggestion, or contact links.
+Edit js/config.js for Discord, GitHub, YouTube, TikTok, support, bug report, suggestion, and contact links.
 
-Mod metadata lives in `js/mods.js`. UI cards and detail pages render from that data instead of duplicating mod content throughout the site.
+Empty URLs intentionally render as Coming Soon rather than fake or dead destinations.
+
+## Project data
+
+Edit js/mods.js. UI listings and Project 01 render from the data model.
+
+Project media currently uses clearly labeled development SVG placeholders under assets/projects/project-01/. Replace those files with real optimized WebP/AVIF/JPG/PNG screenshots later and update the data file if filenames change.
 
 ## Publishing
 
-The repository is compatible with GitHub Pages from the `main` branch root. All navigation uses relative URLs so it can later move to a custom domain without rewriting the site structure.
-
-## Release integrity
-
-The project intentionally avoids fake download numbers, fake users, fake reviews, fake release dates, and fake compatibility data.
+GitHub Pages can continue deploying from the main branch root.

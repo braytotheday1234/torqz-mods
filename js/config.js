@@ -4,15 +4,15 @@ export const SITE_CONFIG = Object.freeze({
   description: "Independent BeamNG.drive mods, development updates, installation help, and clean releases.",
   discordUrl: "",
   githubUrl: "https://github.com/torqzmods/torqz-mods",
-  tiktokUrl: "",
   youtubeUrl: "",
+  tiktokUrl: "",
   supportUrl: "",
   bugReportUrl: "",
   suggestionUrl: "",
   contactEmail: "",
-  accent: "#f36b2b"
+  accent: "#f26a2d"
 });
 
-export function externalOrPlaceholder(url) {
-  return url && url.trim() ? url : null;
+export function configured(value) {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
 }
