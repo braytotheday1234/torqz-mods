@@ -507,6 +507,7 @@ button:disabled{cursor:not-allowed}
   border:1px solid rgba(255,255,255,.025);
   border-radius:50%;
 }
+.page-hero .eyebrow{margin-bottom:10px}
 .page-hero h1{
   margin:0 0 14px;
   font-family:var(--display);

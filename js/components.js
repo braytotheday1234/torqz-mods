@@ -143,7 +143,7 @@ export function projectCard(mod, base = "") {
 export function featureCard(feature, index = 0) {
   const names=["odometer","car","clock","garage","wrench","car"];
   return '<article class="feature-card"><div class="feature-icon">' + icon(names[index % names.length]) + '</div><div><h3>' + feature.title + '</h3><p>' + feature.description + '</p></div><span class="feature-state ' + statusClass(feature.status) + '">' +
-    ({complete:"Working","in-progress":"In development",planned:"Planned"}[feature.status] || feature.status) +
+    ({complete:"Working","in-progress":"In Development",planned:"Planned"}[feature.status] || feature.status) +
   '</span></article>';
 }
 
