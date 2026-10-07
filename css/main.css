@@ -40,13 +40,76 @@ button{cursor:pointer}
 .skip-link:focus{top:16px}
 :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 
-.site-header{position:fixed;inset:0 0 auto;z-index:100;min-height:72px;background:transparent;border:0}
-.site-header-background{position:absolute;inset:0;z-index:0;pointer-events:none;background:rgba(7,10,16,.82);backdrop-filter:blur(14px) saturate(112%);border-bottom:1px solid rgba(151,211,255,.055);transition:background var(--motion-normal) var(--ease-out),border-color var(--motion-normal) var(--ease-out),box-shadow var(--motion-normal) var(--ease-out),backdrop-filter var(--motion-normal) var(--ease-out)}
-.site-header.scrolled .site-header-background{background:rgba(7,10,16,.94);backdrop-filter:blur(18px) saturate(120%);border-color:rgba(151,211,255,.1)}
-.nav-shell{height:72px;display:flex;align-items:center;gap:34px;position:relative;z-index:1}
-.brand{display:flex;align-items:center;gap:11px;flex:0 0 auto;position:relative;z-index:2}
-.brand img{display:block;width:44px;height:44px;object-fit:contain;border-radius:50%;opacity:1;visibility:visible;transform:none;filter:none;transition:transform var(--motion-normal) var(--ease-out),filter var(--motion-normal) var(--ease-out)}
-.brand:hover img,.brand:focus-visible img{transform:scale(1.02);filter:brightness(1.08) drop-shadow(0 0 12px rgba(79,220,255,.16))}
+/* ===== Authoritative navbar rendering ===== */
+.site-header{
+  position:fixed;
+  inset:0 0 auto;
+  z-index:100;
+  min-height:72px;
+  background:transparent;
+  border:0;
+  transform:none;
+  filter:none;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  contain:none;
+  will-change:auto;
+}
+.site-header-background{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:rgba(7,10,16,.96);
+  border-bottom:1px solid rgba(116,226,255,.10);
+  box-shadow:0 10px 24px rgba(0,0,0,.12);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  transition:background var(--motion-normal) var(--ease-out),border-color var(--motion-normal) var(--ease-out),box-shadow var(--motion-normal) var(--ease-out);
+}
+.site-header.scrolled .site-header-background{
+  background:rgba(7,10,16,.985);
+  border-color:rgba(116,226,255,.12);
+  box-shadow:0 14px 30px rgba(0,0,0,.18);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+.nav-shell{
+  height:72px;
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  gap:34px;
+  position:relative;
+  z-index:2;
+}
+.site-header>.nav-shell{
+  position:relative;
+  z-index:2;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  flex:0 0 auto;
+  position:relative;
+  z-index:3;
+  cursor:pointer;
+}
+.brand img,.brand-logo{
+  display:block;
+  width:44px;
+  height:44px;
+  object-fit:contain;
+  border-radius:50%;
+  opacity:1;
+  visibility:visible;
+  transform:none;
+  filter:none;
+  will-change:auto;
+  transition:none;
+}
+
 .brand span{display:grid;line-height:.9}
 .brand strong{font-size:15px;letter-spacing:.12em}
 .brand small{margin-top:5px;color:#8b949e;font-size:8px;letter-spacing:.28em}
@@ -431,12 +494,6 @@ body{
     radial-gradient(circle at 82% 8%,rgba(47,124,255,.035),transparent 22%),
     linear-gradient(180deg,#08090b,#090b0e 36%,#08090b);
 }
-.site-header.scrolled .site-header-background{
-  background:rgba(7,8,10,.93);
-  backdrop-filter:blur(20px) saturate(120%);
-  border-color:rgba(255,255,255,.09);
-  box-shadow:0 12px 28px rgba(0,0,0,.16);
-}
 .search-trigger:hover{
   background:#191d22;
   border-color:#3b424b;
@@ -750,15 +807,6 @@ body{
     radial-gradient(circle at 78% 4%,rgba(79,220,255,.045),transparent 22%),
     radial-gradient(circle at 18% 16%,rgba(47,124,255,.035),transparent 20%),
     linear-gradient(180deg,#08090b 0%,#0a0c0f 38%,#08090b 100%);
-}
-.site-header-background{
-  background:linear-gradient(180deg,rgba(8,9,11,.24),rgba(8,9,11,.04));
-}
-.site-header.scrolled .site-header-background{
-  background:linear-gradient(180deg,rgba(7,8,10,.96),rgba(9,10,12,.91));
-  backdrop-filter:blur(22px) saturate(125%);
-  border-color:rgba(255,255,255,.1);
-  box-shadow:0 16px 36px rgba(0,0,0,.18);
 }
 .desktop-nav a,
 .search-trigger,
@@ -1169,11 +1217,6 @@ body{
     radial-gradient(circle at 54% 44%,rgba(108,99,255,.018),transparent 28%),
     linear-gradient(180deg,#07090d 0%,#09101a 40%,#07090d 100%);
 }
-.site-header.scrolled .site-header-background{
-  background:linear-gradient(180deg,rgba(6,9,14,.97),rgba(8,12,18,.92));
-  border-color:rgba(116,226,255,.1);
-  box-shadow:0 16px 38px rgba(0,0,0,.2),0 0 24px rgba(47,124,255,.025);
-}
 .desktop-nav a:after{
   background:linear-gradient(90deg,var(--brand-blue),var(--brand-cyan));
   box-shadow:0 0 12px rgba(79,220,255,.26);
@@ -1412,9 +1455,6 @@ body{
 }
 
 /* ===== Torqz Mods V12 — motion, interaction & navigation stability ===== */
-.nav-shell{min-height:72px}
-.brand{cursor:pointer}
-.brand:active img{transform:scale(.99)}
 .search-trigger svg{transition:transform var(--motion-fast) var(--ease-out),color var(--motion-fast) var(--ease-out)}
 .search-trigger:hover svg{transform:scale(1.06) translateX(1px);color:var(--brand-cyan)}
 .search-trigger:active svg{transform:scale(.98)}
@@ -1474,17 +1514,11 @@ body{
 .search-result:active{transform:translateX(1px) scale(.995)}
 .site-footer .brand,.footer-brand{isolation:isolate}
 @media(hover:none),(pointer:coarse){
-  .brand:hover img,.desktop-nav a:hover,.search-trigger:hover,.button:hover,.project-card:hover,.update-card:hover,.support-card:hover,.filter-chip:hover,.footer-nav a:hover,.footer-socials a:hover,.search-result:hover{transform:none}
+  .desktop-nav a:hover,.search-trigger:hover,.button:hover,.project-card:hover,.update-card:hover,.support-card:hover,.filter-chip:hover,.footer-nav a:hover,.footer-socials a:hover,.search-result:hover{transform:none}
   .hero-project-card:hover .automotive-art,.project-card:hover .project-card-media .automotive-art{transform:none;filter:none}
 }
 @media(prefers-reduced-motion:reduce){
-  .brand:hover img,.search-trigger:hover svg,.button:hover>span,.text-link:hover>span,.support-card:hover .support-icon,.faq-item:hover>button span,.footer-nav a:hover,.footer-socials a:hover{transform:none!important}
+  .search-trigger:hover svg,.button:hover>span,.text-link:hover>span,.support-card:hover .support-icon,.faq-item:hover>button span,.footer-nav a:hover,.footer-socials a:hover{transform:none!important}
 }
 
 /* Navbar rendering isolation: blur/background live behind stable foreground content. */
-.site-header{backdrop-filter:none;filter:none;transform:none;contain:none;will-change:auto}
-.site-header-background{position:absolute;inset:0;z-index:0;pointer-events:none}
-.site-header>.nav-shell{position:relative;z-index:1}
-.brand,.brand-logo{opacity:1;visibility:visible}
-.brand-logo{display:block;width:44px;height:44px;object-fit:contain;transform:none;filter:none;will-change:auto}
-.brand:hover .brand-logo,.brand:focus-visible .brand-logo{transform:scale(1.02);filter:brightness(1.08) drop-shadow(0 0 12px rgba(79,220,255,.16))}
