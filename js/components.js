@@ -59,7 +59,7 @@ export function mountHeader(active = "") {
     '<a class="skip-link" href="#main-content">Skip to content</a>' +
     '<header class="site-header" data-header><div class="site-shell nav-shell">' +
       '<a class="brand" href="' + href("index.html") + '" aria-label="Torqz Mods home">' +
-        '<img src="' + logo() + '" alt="Torqz Mods" width="44" height="44">' +
+        '<img src="' + logo() + '" alt="Torqz Mods" width="44" height="44" loading="eager" decoding="sync" fetchpriority="high">' +
         '<span><strong>TORQZ</strong><small>MODS</small></span>' +
       '</a>' +
       '<nav class="desktop-nav" aria-label="Primary navigation">' + nav + '</nav>' +
@@ -71,7 +71,7 @@ export function mountHeader(active = "") {
         '<button class="menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu"><i></i><i></i></button>' +
       '</div>' +
     '</div><nav class="mobile-nav" id="mobile-menu" data-mobile-nav aria-hidden="true">' +
-      '<div class="mobile-nav-head"><div class="brand mini"><img src="' + logo() + '" alt="Torqz Mods"><span><strong>TORQZ</strong><small>MODS</small></span></div><button type="button" data-menu-close aria-label="Close menu">×</button></div>' +
+      '<div class="mobile-nav-head"><div class="brand mini"><img src="' + logo() + '" alt="Torqz Mods" width="44" height="44" loading="eager" decoding="sync"><span><strong>TORQZ</strong><small>MODS</small></span></div><button type="button" data-menu-close aria-label="Close menu">×</button></div>' +
       '<div class="mobile-nav-links">' + nav + '</div>' +
       (discord ? '<a class="mobile-discord" href="' + discord + '" target="_blank" rel="noopener noreferrer">Discord ↗</a>' : '<div class="mobile-discord muted">Discord <small>Coming soon</small></div>') +
     '</nav></header>' +
@@ -159,7 +159,8 @@ export function updateCard(update, project = null, prefix = "") {
 }
 
 export function supportCard(iconName,title,text,status,actionHtml="") {
-  return '<article class="support-card"><div class="support-icon">' + icon(iconName) + '</div><h3>' + title + '</h3><p>' + text + '</p>' +
+  const stateClass = actionHtml ? " is-actionable" : " is-unavailable";
+  return '<article class="support-card' + stateClass + '"><div class="support-icon">' + icon(iconName) + '</div><h3>' + title + '</h3><p>' + text + '</p>' +
     (status ? '<span class="support-state ' + (status.toLowerCase().includes("soon") ? "muted" : "") + '">' + status + '</span>' : '') +
     actionHtml +
   '</article>';

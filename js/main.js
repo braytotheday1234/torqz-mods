@@ -12,7 +12,8 @@ mountHeader(document.body.dataset.page||"");
 mountFooter();
 $$("[data-year]").forEach(n=>n.textContent=new Date().getFullYear());
 document.documentElement.classList.add("js");
-requestAnimationFrame(()=>document.body.classList.add("page-ready"));
+document.body.classList.add("page-entering");
+setTimeout(()=>document.body.classList.remove("page-entering"),360);
 
 function toast(message){
   const node=$("[data-toast]");
@@ -150,12 +151,21 @@ document.addEventListener("keydown",event=>{
 const revealObserver="IntersectionObserver"in window?new IntersectionObserver(entries=>{
   entries.forEach(entry=>{
     if(!entry.isIntersecting)return;
+    entry.target.classList.remove("reveal-pending");
     entry.target.classList.add("visible");
     revealObserver.unobserve(entry.target);
   });
-},{threshold:.08,rootMargin:"0px 0px -20px"}):null;
+},{threshold:.08,rootMargin:"0px 0px -18px"}):null;
 function wireReveal(scope=document){
-  $$("[data-reveal]",scope).forEach(node=>revealObserver?revealObserver.observe(node):node.classList.add("visible"));
+  $("[data-reveal]",scope).forEach(node=>{
+    const rect=node.getBoundingClientRect();
+    if(!revealObserver||rect.top<window.innerHeight*1.05){
+      node.classList.add("visible");
+      return;
+    }
+    node.classList.add("reveal-pending");
+    revealObserver.observe(node);
+  });
 }
 wireReveal();
 
@@ -346,11 +356,29 @@ $("[data-lightbox-prev]")?.addEventListener("click",()=>showLightbox(galleryInde
 $("[data-lightbox-next]")?.addEventListener("click",()=>showLightbox(galleryIndex+1));
 
 document.addEventListener("click",event=>{
+  if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
   const link=event.target.closest('a[href]');
   if(!link||link.target==="_blank"||link.hasAttribute("download"))return;
+  const href=link.getAttribute("href")||"";
+  if(href.startsWith("#")||href.startsWith("mailto:")||href.startsWith("tel:")||href.startsWith("javascript:"))return;
   const url=new URL(link.href,location.href);
-  if(url.origin!==location.origin||(url.hash&&url.pathname===location.pathname))return;
+  if(url.origin!==location.origin)return;
+  if(url.pathname===location.pathname&&url.search===location.search)return;
   event.preventDefault();
+  closeSearch();
+  closeMenu();
   document.body.classList.add("page-leaving");
-  setTimeout(()=>location.href=link.href,110);
+  const navigate=()=>{location.href=link.href;};
+  const timer=setTimeout(navigate,190);
+  document.body.addEventListener("transitionend",event=>{
+    if(event.propertyName!=="opacity")return;
+    clearTimeout(timer);
+    navigate();
+  },{once:true});
+});
+
+window.addEventListener("pageshow",()=>{
+  document.body.classList.remove("page-leaving");
+  document.body.classList.add("page-entering");
+  setTimeout(()=>document.body.classList.remove("page-entering"),360);
 });
