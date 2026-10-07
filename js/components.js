@@ -91,10 +91,11 @@ export function mountFooter() {
   if (!target) return;
   target.innerHTML =
     '<footer class="site-footer"><div class="site-shell footer-main">' +
-      '<div class="footer-brand"><img src="' + logo() + '" alt="Torqz Mods" width="76" height="76"><div><strong>TORQZ MODS</strong><p>Original BeamNG.drive projects.</p></div></div>' +
-      '<div class="footer-nav"><a href="' + href("mods.html") + '">Mods</a><a href="' + href("updates.html") + '">Updates</a><a href="' + href("about.html") + '">About</a><a href="' + href("support.html") + '">Support</a></div>' +
-      '<div class="footer-socials">' + socialLink("Discord",SITE_CONFIG.discordUrl) + socialLink("YouTube",SITE_CONFIG.youtubeUrl) + socialLink("TikTok",SITE_CONFIG.tiktokUrl) + '</div>' +
-    '</div><div class="site-shell footer-bottom"><span>© <span data-year></span> Torqz Mods</span><span>Torqz Mods is not affiliated with BeamNG GmbH.</span></div></footer>' +
+      '<div class="footer-brand"><img src="' + logo() + '" alt="Torqz Mods" width="76" height="76" loading="lazy" decoding="async"><div><strong>TORQZ MODS</strong><p>Original BeamNG.drive projects.</p></div></div>' +
+      '<div class="footer-group"><h2>Projects</h2><a href="' + href("mods.html") + '">Mods</a><a href="' + href("updates.html") + '">Updates</a><a href="' + href("mods/project-01.html") + '">Torqz Garage</a></div>' +
+      '<div class="footer-group"><h2>Company</h2><a href="' + href("about.html") + '">About</a><a href="' + href("support.html") + '">Support</a></div>' +
+      '<div class="footer-group footer-socials"><h2>Community</h2>' + socialLink("Discord",SITE_CONFIG.discordUrl) + socialLink("YouTube",SITE_CONFIG.youtubeUrl) + socialLink("TikTok",SITE_CONFIG.tiktokUrl) + '</div>' +
+    '</div><div class="site-shell footer-bottom"><span>© <span data-year></span> Torqz Mods</span><span>Not affiliated with BeamNG GmbH.</span></div></footer>' +
     '<div class="toast" data-toast role="status" aria-live="polite"></div>' +
     '<div class="lightbox" data-lightbox aria-hidden="true" role="dialog" aria-modal="true" aria-label="Project media viewer" tabindex="-1">' +
       '<button class="lightbox-close" type="button" data-lightbox-close aria-label="Close media">×</button>' +
