@@ -1,53 +1,44 @@
-# Torqz Mods V7
+# Torqz Mods
 
-V7 simplifies the V6 direction without rebuilding the site from scratch.
+Official static website for **Torqz Mods**, an independent BeamNG.drive modding brand.
 
-The website keeps the existing Torqz identity — dark automotive styling, white type, orange accent, real Torqz logo, navigation, search, Mods, Updates, About, Support, and project pages — but removes the developer-dashboard feeling.
+The site is intentionally lightweight and deploys directly through GitHub Pages. It uses shared project data, reusable header/footer/components, and a single organized design system.
 
-## V7 direction
+## Current project
 
-- cleaner
-- more casual
-- easier to browse
-- less technical
-- less status-heavy
-- shorter copy
-- fewer boxes
-- tighter spacing
-- more creator/community feel
+**Project 01 — Torqz Garage**
 
-## Torqz Garage
+Torqz Garage is in development and focuses on persistent vehicle ownership, mileage, vehicle data, and future garage features.
 
-Project 01 remains the internal development name.
+No release date, version, compatibility claim, download, file size, or other unverified release information is published until it is real.
 
-Public project name:
+## Architecture
 
-**Torqz Garage**
+- `js/config.js` — site URLs and environment configuration
+- `js/mods.js` — shared project data
+- `js/updates.js` — development updates derived from project data
+- `js/components.js` — shared header, footer, cards, media, and UI components
+- `js/main.js` — page initialization and interactions
+- `css/main.css` — authoritative design system and responsive styling
 
-Tagline:
+The project data feeds the homepage, Mods page, project page, search, and Updates page.
 
-**A better way to own and track your BeamNG vehicles.**
+## Brand system
 
-The project is still in development. Real release data is not invented.
+The current visual identity uses a dark automotive base with Torqz electric blue/cyan accents.
 
-## Shared project data
-
-`js/mods.js` remains the source for project information.
-
-Updating project data automatically feeds:
-
-- homepage
-- Mods page
-- project page
-- search
-- Updates page
+The navbar logo uses the existing stable CSS-background rendering architecture. Do not convert it back to a reveal/lazy/composited image implementation without a verified reason.
 
 ## Media
 
-The site still supports real project and development media when it exists.
+Project media supports real images and local video when they exist. Until real screenshots are available, Torqz Garage uses intentional development artwork rather than fake BeamNG screenshots.
 
-Until real screenshots are added, Torqz Garage uses a simple branded visual with the real Torqz logo rather than a fake vehicle screenshot or technical dashboard graphic.
+## External links
+
+Discord, YouTube, TikTok, bug reporting, and suggestions are configured in `js/config.js`.
+
+If a URL is empty, the website displays an intentional **Coming Soon** state rather than a fake or dead link.
 
 ## Deployment
 
-Production is served from the `main` branch through GitHub Pages.
+Production deploys from the `main` branch through GitHub Pages.
