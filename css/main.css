@@ -96,12 +96,16 @@ button{cursor:pointer}
   z-index:3;
   cursor:pointer;
 }
-.brand img,.brand-logo{
+.header-logo-mark{
   display:block;
+  flex:0 0 44px;
   width:44px;
   height:44px;
-  object-fit:contain;
   border-radius:50%;
+  background-image:url("../assets/brand/torqz-logo.webp");
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:contain;
   opacity:1;
   visibility:visible;
   transform:none;
@@ -413,7 +417,7 @@ body.page-leaving main{opacity:0;transform:translateY(-10px)}
   .mobile-nav{position:fixed;inset:0;z-index:130;background:#0b0d10;padding:18px 22px 26px;display:flex;flex-direction:column;transform:translateX(100%);transition:.22s ease}
   .mobile-nav.open{transform:none}
   .mobile-nav-head{display:flex;align-items:center;justify-content:space-between}
-  .brand.mini img{width:42px;height:42px}
+  .brand.mini .header-logo-mark{width:42px;height:42px;flex-basis:42px}
   .mobile-nav-head>button{width:40px;height:40px;border:1px solid var(--line);border-radius:8px;background:#14171b;font-size:23px}
   .mobile-nav-links{display:grid;margin-top:34px}
   .mobile-nav-links a{padding:16px 0;border-bottom:1px solid var(--line);font-family:var(--display);font-size:34px}

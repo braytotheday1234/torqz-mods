@@ -59,7 +59,7 @@ export function mountHeader(active = "") {
     '<a class="skip-link" href="#main-content">Skip to content</a>' +
     '<header class="site-header" data-header><div class="site-header-background" aria-hidden="true"></div><div class="site-shell nav-shell">' +
       '<a class="brand" href="' + href("index.html") + '" aria-label="Torqz Mods home">' +
-        '<img class="brand-logo" src="' + logo() + '" alt="Torqz Mods" width="44" height="44" loading="eager" decoding="sync" fetchpriority="high">' +
+        '<span class="header-logo-mark" aria-hidden="true"></span>' +
         '<span><strong>TORQZ</strong><small>MODS</small></span>' +
       '</a>' +
       '<nav class="desktop-nav" aria-label="Primary navigation">' + nav + '</nav>' +
@@ -71,7 +71,7 @@ export function mountHeader(active = "") {
         '<button class="menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu"><i></i><i></i></button>' +
       '</div>' +
     '</div><nav class="mobile-nav" id="mobile-menu" data-mobile-nav aria-hidden="true">' +
-      '<div class="mobile-nav-head"><div class="brand mini"><img src="' + logo() + '" alt="Torqz Mods" width="44" height="44" loading="eager" decoding="sync"><span><strong>TORQZ</strong><small>MODS</small></span></div><button type="button" data-menu-close aria-label="Close menu">×</button></div>' +
+      '<div class="mobile-nav-head"><div class="brand mini"><span class="header-logo-mark" aria-hidden="true"></span><span><strong>TORQZ</strong><small>MODS</small></span></div><button type="button" data-menu-close aria-label="Close menu">×</button></div>' +
       '<div class="mobile-nav-links">' + nav + '</div>' +
       (discord ? '<a class="mobile-discord" href="' + discord + '" target="_blank" rel="noopener noreferrer">Discord ↗</a>' : '<div class="mobile-discord muted">Discord <small>Coming soon</small></div>') +
     '</nav></header>' +
