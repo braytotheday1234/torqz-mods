@@ -157,7 +157,7 @@ const revealObserver="IntersectionObserver"in window?new IntersectionObserver(en
   });
 },{threshold:.08,rootMargin:"0px 0px -18px"}):null;
 function wireReveal(scope=document){
-  $("[data-reveal]",scope).forEach(node=>{
+  $$("[data-reveal]",scope).forEach(node=>{
     const rect=node.getBoundingClientRect();
     if(!revealObserver||rect.top<window.innerHeight*1.05){
       node.classList.add("visible");
