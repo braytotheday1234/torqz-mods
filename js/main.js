@@ -1,384 +1,865 @@
 import { SITE_CONFIG, configured } from "./config.js";
-import { MODS, getModBySlug, getProjectName, displayValue, projectCategories, projectCategoryLabel, resolvedDownloadState } from "./mods.js";
+import {
+  MODS,
+  getModBySlug,
+  getProjectName,
+  displayValue,
+  projectCategories,
+  projectCategoryLabel
+} from "./mods.js";
 import { UPDATES, updatesForProject } from "./updates.js";
-import { mountHeader, mountFooter, projectCard, projectMedia, featureCard, updateCard, supportCard, statusBadge, button, sectionTitle, icon } from "./components.js";
+import {
+  mountHeader,
+  mountFooter,
+  projectCard,
+  projectMedia,
+  featureCard,
+  updateCard,
+  supportCard,
+  statusBadge,
+  button,
+  sectionTitle,
+  icon
+} from "./components.js";
 
-const $=(s,scope=document)=>scope.querySelector(s);
-const $$=(s,scope=document)=>[...scope.querySelectorAll(s)];
-const base=document.body.dataset.root||"";
-const focusable='a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),video[controls],[tabindex]:not([tabindex="-1"])';
+const $ = (selector, scope = document) => scope.querySelector(selector);
+const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
+const base = document.body.dataset.root || "";
+const focusableSelector =
+  'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),video[controls],[tabindex]:not([tabindex="-1"])';
+const projectById = new Map(MODS.map((project) => [project.id, project]));
 
-mountHeader(document.body.dataset.page||"");
+mountHeader(document.body.dataset.page || "");
 mountFooter();
-$$("[data-year]").forEach(n=>n.textContent=new Date().getFullYear());
-document.documentElement.classList.add("js");
-document.body.classList.add("page-entering");
-setTimeout(()=>document.body.classList.remove("page-entering"),360);
 
-function toast(message){
-  const node=$("[data-toast]");
-  if(!node)return;
-  node.textContent=message;
+function toast(message) {
+  const node = $("[data-toast]");
+  if (!node) return;
+  node.textContent = message;
   node.classList.add("show");
   clearTimeout(toast.timer);
-  toast.timer=setTimeout(()=>node.classList.remove("show"),2200);
+  toast.timer = setTimeout(() => node.classList.remove("show"), 2200);
 }
 
-$$("[data-placeholder-link]").forEach(node=>node.addEventListener("click",e=>{e.preventDefault();toast("Coming soon.");}));
-$$("[data-discord-link]").forEach(node=>node.addEventListener("click",e=>{
-  e.preventDefault();
-  const url=configured(SITE_CONFIG.discordUrl);
-  if(url)window.open(url,"_blank","noopener,noreferrer");
-  else toast("Discord is coming soon.");
-}));
-
-const header=$("[data-header]");
-if(header){
-  const update=()=>header.classList.toggle("scrolled",window.scrollY>12);
-  update();window.addEventListener("scroll",update,{passive:true});
-}
-
-const shortcut=$("[data-search-shortcut]");
-if(shortcut)shortcut.textContent=/Mac|iPhone|iPad/.test(navigator.platform)?"⌘ K":"Ctrl K";
-
-function trapFocus(event,container){
-  if(event.key!=="Tab"||!container)return;
-  const nodes=$$(focusable,container).filter(n=>n.offsetParent!==null);
-  if(!nodes.length)return;
-  if(event.shiftKey&&document.activeElement===nodes[0]){event.preventDefault();nodes.at(-1).focus();}
-  else if(!event.shiftKey&&document.activeElement===nodes.at(-1)){event.preventDefault();nodes[0].focus();}
-}
-
-const menu=$("[data-mobile-nav]");
-const menuToggle=$("[data-menu-toggle]");
-let menuFocus=null;
-function openMenu(){
-  menuFocus=document.activeElement;
-  menu?.classList.add("open");
-  menu?.setAttribute("aria-hidden","false");
-  menuToggle?.setAttribute("aria-expanded","true");
-  document.body.classList.add("menu-open");
-  setTimeout(()=>$("[data-menu-close]",menu)?.focus(),20);
-}
-function closeMenu(){
-  menu?.classList.remove("open");
-  menu?.setAttribute("aria-hidden","true");
-  menuToggle?.setAttribute("aria-expanded","false");
-  document.body.classList.remove("menu-open");
-  menuFocus?.focus?.();
-}
-menuToggle?.addEventListener("click",()=>menu?.classList.contains("open")?closeMenu():openMenu());
-$("[data-menu-close]")?.addEventListener("click",closeMenu);
-$$(".mobile-nav a").forEach(a=>a.addEventListener("click",closeMenu));
-
-const searchOverlay=$("[data-search-overlay]");
-const searchDialog=$("[data-search-dialog]");
-const searchInput=$("[data-global-search]");
-const searchResults=$("[data-search-results]");
-let searchIndex=-1;
-let searchFocus=null;
-
-function searchText(mod){
-  return [mod.publicName,mod.internalName,mod.tagline,mod.subtitle,mod.shortDescription,mod.category,...(mod.categories||[]),...(mod.tags||[])].filter(Boolean).join(" ").toLowerCase();
-}
-function renderSearch(){
-  if(!searchInput||!searchResults)return;
-  const q=searchInput.value.trim().toLowerCase();
-  if(!q){
-    searchResults.innerHTML='<div class="search-empty"><strong>Search Torqz Mods</strong><span>Try “Torqz Garage”, “mileage”, or “vehicle data”.</span></div>';
-    searchIndex=-1;return;
+function trapFocus(event, container) {
+  if (event.key !== "Tab" || !container) return;
+  const nodes = $$(focusableSelector, container).filter((node) => node.offsetParent !== null);
+  if (!nodes.length) return;
+  const first = nodes[0];
+  const last = nodes.at(-1);
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
   }
-  const matches=MODS.filter(mod=>searchText(mod).includes(q));
-  if(!matches.length){
-    searchResults.innerHTML='<div class="search-empty"><strong>No project found.</strong><span>Try another search.</span></div>';
-    searchIndex=-1;return;
-  }
-  searchResults.innerHTML=matches.map((mod,index)=>
-    '<a class="search-result '+(index===0?"selected":"")+'" href="'+base+'mods/'+mod.slug+'.html" data-search-result>'+
-      '<div class="search-result-thumb">'+projectMedia(mod,false,true)+'</div>'+
-      '<div><strong>'+getProjectName(mod)+'</strong><span>'+mod.subtitle+'</span></div><b>→</b>'+
-    '</a>'
-  ).join("");
-  searchIndex=0;
 }
-function openSearch(){
-  closeMenu();
-  searchFocus=document.activeElement;
-  searchOverlay?.classList.add("open");
-  searchOverlay?.setAttribute("aria-hidden","false");
-  document.body.classList.add("search-open");
-  renderSearch();
-  setTimeout(()=>searchInput?.focus(),20);
-}
-function closeSearch(){
-  searchOverlay?.classList.remove("open");
-  searchOverlay?.setAttribute("aria-hidden","true");
-  document.body.classList.remove("search-open");
-  searchIndex=-1;
-  searchFocus?.focus?.();
-}
-function moveSearch(delta){
-  const results=$$("[data-search-result]");
-  if(!results.length)return;
-  searchIndex=Math.max(0,Math.min(results.length-1,searchIndex+delta));
-  results.forEach((n,i)=>n.classList.toggle("selected",i===searchIndex));
-  results[searchIndex]?.scrollIntoView({block:"nearest"});
-}
-$("[data-search-trigger]")?.addEventListener("click",openSearch);
-$$("[data-search-close]").forEach(n=>n.addEventListener("click",closeSearch));
-searchInput?.addEventListener("input",renderSearch);
 
-document.addEventListener("keydown",event=>{
-  const typing=["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName);
-  if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){event.preventDefault();openSearch();return;}
-  if(event.key==="/"&&!typing&&!searchOverlay?.classList.contains("open")){event.preventDefault();openSearch();return;}
-  if(event.key==="Escape"){
-    if(searchOverlay?.classList.contains("open")){closeSearch();return;}
-    if(menu?.classList.contains("open")){closeMenu();return;}
-    if($("[data-lightbox]")?.classList.contains("open")){closeLightbox();return;}
-  }
-  if(searchOverlay?.classList.contains("open")){
-    trapFocus(event,searchDialog);
-    if(event.key==="ArrowDown"){event.preventDefault();moveSearch(1);}
-    if(event.key==="ArrowUp"){event.preventDefault();moveSearch(-1);}
-    if(event.key==="Enter"&&searchIndex>=0){
-      const target=$$("[data-search-result]")[searchIndex];
-      if(target)location.href=target.href;
-    }
-  } else if(menu?.classList.contains("open")) trapFocus(event,menu);
-});
-
-const revealObserver="IntersectionObserver"in window?new IntersectionObserver(entries=>{
-  entries.forEach(entry=>{
-    if(!entry.isIntersecting)return;
-    entry.target.classList.remove("reveal-pending");
-    entry.target.classList.add("visible");
-    revealObserver.unobserve(entry.target);
+function initDocumentState() {
+  $$("[data-year]").forEach((node) => {
+    node.textContent = new Date().getFullYear();
   });
-},{threshold:.08,rootMargin:"0px 0px -18px"}):null;
-function wireReveal(scope=document){
-  $$("[data-reveal]",scope).forEach(node=>{
-    const rect=node.getBoundingClientRect();
-    if(!revealObserver||rect.top<window.innerHeight*1.05){
+
+  document.documentElement.classList.add("js");
+  document.body.classList.add("page-entering");
+  setTimeout(() => document.body.classList.remove("page-entering"), 360);
+
+  const shortcut = $("[data-search-shortcut]");
+  if (shortcut) {
+    shortcut.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘ K" : "Ctrl K";
+  }
+
+  $$("[data-placeholder-link]").forEach((node) => {
+    node.addEventListener("click", (event) => {
+      event.preventDefault();
+      toast("Coming soon.");
+    });
+  });
+
+  $$("[data-discord-link]").forEach((node) => {
+    node.addEventListener("click", (event) => {
+      event.preventDefault();
+      const url = configured(SITE_CONFIG.discordUrl);
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+      else toast("Discord is coming soon.");
+    });
+  });
+}
+
+function initHeaderState() {
+  const header = $("[data-header]");
+  if (!header) return;
+  const update = () => header.classList.toggle("scrolled", window.scrollY > 12);
+  update();
+  window.addEventListener("scroll", update, { passive: true });
+}
+
+function initMobileMenu() {
+  const menu = $("[data-mobile-nav]");
+  const toggle = $("[data-menu-toggle]");
+  const close = $("[data-menu-close]");
+  if (!menu || !toggle) return;
+
+  let previousFocus = null;
+
+  const closeMenu = ({ restoreFocus = true } = {}) => {
+    menu.classList.remove("open");
+    menu.setAttribute("aria-hidden", "true");
+    toggle.setAttribute("aria-expanded", "false");
+    document.body.classList.remove("menu-open");
+    if (restoreFocus) previousFocus?.focus?.();
+  };
+
+  const openMenu = () => {
+    previousFocus = document.activeElement;
+    menu.classList.add("open");
+    menu.setAttribute("aria-hidden", "false");
+    toggle.setAttribute("aria-expanded", "true");
+    document.body.classList.add("menu-open");
+    setTimeout(() => close?.focus(), 20);
+  };
+
+  toggle.addEventListener("click", () => {
+    if (menu.classList.contains("open")) closeMenu();
+    else openMenu();
+  });
+
+  close?.addEventListener("click", () => closeMenu());
+  $$(".mobile-nav a").forEach((link) => link.addEventListener("click", () => closeMenu({ restoreFocus: false })));
+
+  menu.closeMenu = closeMenu;
+  menu.trap = (event) => trapFocus(event, menu);
+}
+
+function projectSearchText(project) {
+  return [
+    project.publicName,
+    project.internalName,
+    project.tagline,
+    project.subtitle,
+    project.shortDescription,
+    project.category,
+    project.status,
+    project.currentPhase,
+    ...(project.categories || []),
+    ...(project.tags || []),
+    ...(project.features || []).map((feature) => feature.title)
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function initSearch() {
+  const overlay = $("[data-search-overlay]");
+  const dialog = $("[data-search-dialog]");
+  const input = $("[data-global-search]");
+  const results = $("[data-search-results]");
+  const trigger = $("[data-search-trigger]");
+  if (!overlay || !dialog || !input || !results || !trigger) return;
+
+  let selectedIndex = -1;
+  let previousFocus = null;
+
+  const render = () => {
+    const query = input.value.trim().toLowerCase();
+
+    if (!query) {
+      results.innerHTML =
+        '<div class="search-empty"><strong>Search Torqz Mods</strong><span>Try “Torqz Garage”, “mileage”, or “vehicle data”.</span></div>';
+      selectedIndex = -1;
+      return;
+    }
+
+    const matches = MODS.filter((project) => projectSearchText(project).includes(query));
+    if (!matches.length) {
+      results.innerHTML =
+        '<div class="search-empty"><strong>No project found.</strong><span>Try another search.</span></div>';
+      selectedIndex = -1;
+      return;
+    }
+
+    results.innerHTML = matches
+      .map(
+        (project, index) =>
+          '<a class="search-result ' +
+          (index === 0 ? "selected" : "") +
+          '" href="' +
+          base +
+          "mods/" +
+          project.slug +
+          '.html" data-search-result>' +
+          '<div class="search-result-thumb">' +
+          projectMedia(project, false, true) +
+          "</div>" +
+          "<div><strong>" +
+          getProjectName(project) +
+          "</strong><span>" +
+          project.subtitle +
+          "</span></div><b>→</b></a>"
+      )
+      .join("");
+    selectedIndex = 0;
+  };
+
+  const closeSearch = ({ restoreFocus = true } = {}) => {
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("search-open");
+    selectedIndex = -1;
+    if (restoreFocus) previousFocus?.focus?.();
+  };
+
+  const openSearch = () => {
+    const menu = $("[data-mobile-nav]");
+    menu?.closeMenu?.({ restoreFocus: false });
+    previousFocus = document.activeElement;
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden", "false");
+    document.body.classList.add("search-open");
+    render();
+    setTimeout(() => input.focus(), 20);
+  };
+
+  const moveSelection = (delta) => {
+    const items = $$("[data-search-result]");
+    if (!items.length) return;
+    selectedIndex = Math.max(0, Math.min(items.length - 1, selectedIndex + delta));
+    items.forEach((item, index) => item.classList.toggle("selected", index === selectedIndex));
+    items[selectedIndex]?.scrollIntoView({ block: "nearest" });
+  };
+
+  trigger.addEventListener("click", openSearch);
+  $$("[data-search-close]").forEach((node) => node.addEventListener("click", () => closeSearch()));
+  input.addEventListener("input", render);
+
+  overlay.openSearch = openSearch;
+  overlay.closeSearch = closeSearch;
+  overlay.moveSelection = moveSelection;
+  overlay.trap = (event) => trapFocus(event, dialog);
+  overlay.getSelectedResult = () => $$("[data-search-result]")[selectedIndex] || null;
+}
+
+function initKeyboardShortcuts() {
+  document.addEventListener("keydown", (event) => {
+    const typing = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName);
+    const search = $("[data-search-overlay]");
+    const menu = $("[data-mobile-nav]");
+    const lightbox = $("[data-lightbox]");
+
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+      event.preventDefault();
+      search?.openSearch?.();
+      return;
+    }
+
+    if (event.key === "/" && !typing && !search?.classList.contains("open")) {
+      event.preventDefault();
+      search?.openSearch?.();
+      return;
+    }
+
+    if (event.key === "Escape") {
+      if (lightbox?.classList.contains("open")) {
+        lightbox.closeLightbox?.();
+        return;
+      }
+      if (search?.classList.contains("open")) {
+        search.closeSearch?.();
+        return;
+      }
+      if (menu?.classList.contains("open")) {
+        menu.closeMenu?.();
+        return;
+      }
+    }
+
+    if (lightbox?.classList.contains("open")) {
+      lightbox.trap?.(event);
+      if (event.key === "ArrowLeft") lightbox.showPrevious?.();
+      if (event.key === "ArrowRight") lightbox.showNext?.();
+      return;
+    }
+
+    if (search?.classList.contains("open")) {
+      search.trap?.(event);
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        search.moveSelection?.(1);
+      }
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        search.moveSelection?.(-1);
+      }
+      if (event.key === "Enter") {
+        const target = search.getSelectedResult?.();
+        if (target) {
+          event.preventDefault();
+          location.href = target.href;
+        }
+      }
+      return;
+    }
+
+    if (menu?.classList.contains("open")) {
+      menu.trap?.(event);
+    }
+  });
+}
+
+function initRevealMotion() {
+  if (!("IntersectionObserver" in window)) {
+    $$("[data-reveal]").forEach((node) => node.classList.add("visible"));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.remove("reveal-pending");
+        entry.target.classList.add("visible");
+        observer.unobserve(entry.target);
+      });
+    },
+    { threshold: 0.08, rootMargin: "0px 0px -18px" }
+  );
+
+  $$("[data-reveal]").forEach((node) => {
+    const rect = node.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 1.05) {
       node.classList.add("visible");
       return;
     }
     node.classList.add("reveal-pending");
-    revealObserver.observe(node);
+    observer.observe(node);
   });
 }
-wireReveal();
 
-const videoObserver="IntersectionObserver"in window?new IntersectionObserver(entries=>{
-  entries.forEach(entry=>{
-    if(!entry.isIntersecting)return;
-    const video=entry.target;
-    const source=$("source[data-src]",video);
-    if(source&&!source.src){source.src=source.dataset.src;video.load();}
-    videoObserver.unobserve(video);
-  });
-},{rootMargin:"220px"}):null;
-function wireVideos(scope=document){
-  $$("[data-lazy-video]",scope).forEach(v=>videoObserver?videoObserver.observe(v):v.load());
+function initLazyVideos(scope = document) {
+  const videos = $$("[data-lazy-video]", scope);
+  if (!videos.length) return;
+
+  if (!("IntersectionObserver" in window)) {
+    videos.forEach((video) => {
+      const source = $("source[data-src]", video);
+      if (source && !source.src) source.src = source.dataset.src;
+      video.load();
+    });
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const video = entry.target;
+        const source = $("source[data-src]", video);
+        if (source && !source.src) {
+          source.src = source.dataset.src;
+          video.load();
+        }
+        observer.unobserve(video);
+      });
+    },
+    { rootMargin: "220px" }
+  );
+
+  videos.forEach((video) => observer.observe(video));
 }
-wireVideos();
 
-function projectForUpdate(update){return MODS.find(mod=>mod.id===update.projectId)||null;}
+function projectForUpdate(update) {
+  return projectById.get(update.projectId) || null;
+}
 
-const featuredMount=$("[data-featured-project]");
-if(featuredMount){
-  const mod=MODS.find(m=>m.featured);
-  if(mod){
-    featuredMount.innerHTML=
-      '<div class="featured-media">'+projectMedia(mod)+'</div>'+
-      '<div class="featured-copy">'+statusBadge(mod.status,true)+'<span class="eyebrow">Featured Project</span><h2>'+getProjectName(mod)+'</h2><p class="featured-tagline">'+mod.subtitle+'</p><p>'+mod.shortDescription+'</p>'+
-      '<div class="highlight-list"><span>Persistent Vehicle Identity</span><span>Mileage Tracking</span><span>Garage Records</span></div>'+
-      '<a class="text-link strong" href="mods/'+mod.slug+'.html">View Torqz Garage <span>→</span></a></div>';
+function initHomepage() {
+  const featuredMount = $("[data-featured-project]");
+  const featuresMount = $("[data-home-features]");
+  const latestMount = $("[data-latest-updates]");
+  const featured = MODS.find((project) => project.featured);
+
+  if (featuredMount && featured) {
+    const highlights = (featured.features || [])
+      .slice(0, 3)
+      .map((feature) => "<span>" + feature.title + "</span>")
+      .join("");
+
+    featuredMount.innerHTML =
+      '<div class="featured-media">' +
+      projectMedia(featured) +
+      "</div>" +
+      '<div class="featured-copy">' +
+      statusBadge(featured.status, true) +
+      '<span class="eyebrow">Featured Project</span><h2>' +
+      getProjectName(featured) +
+      '</h2><p class="featured-tagline">' +
+      featured.subtitle +
+      "</p><p>" +
+      featured.shortDescription +
+      '</p><div class="highlight-list">' +
+      highlights +
+      '</div><a class="text-link strong" href="mods/' +
+      featured.slug +
+      '.html">View Project <span>→</span></a></div>';
+  }
+
+  if (featuresMount && featured) {
+    featuresMount.innerHTML = featured.features.slice(0, 4).map((feature, index) => featureCard(feature, index)).join("");
+  }
+
+  if (latestMount) {
+    latestMount.innerHTML = UPDATES.slice(0, 3)
+      .map((update) => updateCard(update, projectForUpdate(update)))
+      .join("");
   }
 }
 
-const featuresMount=$("[data-home-features]");
-if(featuresMount){
-  const mod=MODS.find(m=>m.featured);
-  if(mod)featuresMount.innerHTML=mod.features.slice(0,4).map((f,i)=>featureCard(f,i)).join("");
-}
+function initModsLibrary() {
+  const mount = $("[data-mod-grid]");
+  const categoryMount = $("[data-category-list]");
+  if (!mount || !categoryMount) return;
 
-const latestMount=$("[data-latest-updates]");
-if(latestMount)latestMount.innerHTML=UPDATES.slice(0,3).map(u=>updateCard(u,projectForUpdate(u))).join("");
+  const search = $("[data-mod-search]");
+  const sort = $("[data-sort]");
+  const categories = ["All", ...new Set(MODS.flatMap(projectCategories))];
 
-const modsMount=$("[data-mod-grid]");
-const categoryMount=$("[data-category-list]");
-if(categoryMount){
-  const cats=["All",...new Set(MODS.flatMap(projectCategories))];
-  categoryMount.innerHTML=cats.map((c,i)=>'<button class="filter-chip '+(i===0?"active":"")+'" type="button" data-category-filter="'+c+'">'+c+'</button>').join("");
-}
-if(modsMount){
-  const localSearch=$("[data-mod-search]");
-  const sort=$("[data-sort]");
-  function renderMods(){
-    const active=$("[data-category-filter].active")?.dataset.categoryFilter||"All";
-    const query=localSearch?.value.trim().toLowerCase()||"";
-    let items=MODS.filter(mod=>(active==="All"||projectCategories(mod).includes(active))&&searchText(mod).includes(query));
-    if(sort?.value==="az")items=[...items].sort((a,b)=>getProjectName(a).localeCompare(getProjectName(b)));
-    if(sort?.value==="updated")items=[...items].sort((a,b)=>(b.updatedAt||"").localeCompare(a.updatedAt||""));
-    modsMount.innerHTML=items.length?items.map(mod=>projectCard(mod,base)).join(""):'<div class="empty-state"><strong>No matching projects.</strong><span>Try another search or filter.</span></div>';
-    const count=$("[data-result-count]");
-    if(count)count.textContent=items.length+(items.length===1?" project":" projects");
-    const note=$("[data-project-note]");
-    if(note)note.hidden=MODS.length!==1;
-    wireVideos(modsMount);
-  }
-  categoryMount?.addEventListener("click",e=>{
-    const btn=e.target.closest("[data-category-filter]");
-    if(!btn)return;
-    $$("[data-category-filter]",categoryMount).forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");renderMods();
+  categoryMount.innerHTML = categories
+    .map(
+      (category, index) =>
+        '<button class="filter-chip ' +
+        (index === 0 ? "active" : "") +
+        '" type="button" data-category-filter="' +
+        category +
+        '">' +
+        category +
+        "</button>"
+    )
+    .join("");
+
+  const render = () => {
+    const active = $("[data-category-filter].active")?.dataset.categoryFilter || "All";
+    const query = search?.value.trim().toLowerCase() || "";
+
+    let items = MODS.filter(
+      (project) =>
+        (active === "All" || projectCategories(project).includes(active)) &&
+        projectSearchText(project).includes(query)
+    );
+
+    if (sort?.value === "az") {
+      items = [...items].sort((a, b) => getProjectName(a).localeCompare(getProjectName(b)));
+    } else if (sort?.value === "updated") {
+      items = [...items].sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+    }
+
+    mount.innerHTML = items.length
+      ? items.map((project) => projectCard(project, base)).join("")
+      : '<div class="empty-state"><strong>No matching projects.</strong><span>Try another search or filter.</span></div>';
+
+    const count = $("[data-result-count]");
+    if (count) count.textContent = items.length + (items.length === 1 ? " project" : " projects");
+
+    const note = $("[data-project-note]");
+    if (note) note.hidden = MODS.length !== 1;
+
+    initLazyVideos(mount);
+  };
+
+  categoryMount.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-category-filter]");
+    if (!button) return;
+    $$("[data-category-filter]", categoryMount).forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    render();
   });
-  localSearch?.addEventListener("input",renderMods);
-  sort?.addEventListener("change",renderMods);
-  renderMods();
+
+  search?.addEventListener("input", render);
+  sort?.addEventListener("change", render);
+  render();
 }
 
-const updatesMount=$("[data-updates-list]");
-if(updatesMount)updatesMount.innerHTML=UPDATES.map(u=>updateCard(u,projectForUpdate(u))).join("");
+function renderDevelopmentTimeline(project) {
+  return (
+    '<div class="development-timeline">' +
+    (project.milestones || [])
+      .map((milestone, index) => {
+        const label =
+          {
+            complete: "Complete",
+            "in-progress": "In progress",
+            planned: index === 2 ? "Next" : "Planned",
+            blocked: "Blocked"
+          }[milestone.status] || milestone.status;
 
-const supportMount=$("[data-support-cards]");
-if(supportMount){
-  const discord=configured(SITE_CONFIG.discordUrl);
-  const bug=configured(SITE_CONFIG.bugReportUrl);
-  const suggest=configured(SITE_CONFIG.suggestionUrl);
-  supportMount.innerHTML=
-    supportCard("help","Discord Support","Chat with the Torqz community and get help with projects.",discord?"Available":"Coming soon",discord?'<a class="support-action" href="'+discord+'" target="_blank" rel="noopener noreferrer">Open Discord →</a>':"")+
-    supportCard("download","Installation Help","Find install information for Torqz projects when releases are ready.","Available",'<a class="support-action" href="install.html">Open Guide →</a>')+
-    supportCard("bug","Report a Bug","Send a bug report when the Torqz report form is ready.",bug?"Available":"Coming soon",bug?'<a class="support-action" href="'+bug+'" target="_blank" rel="noopener noreferrer">Report Bug →</a>':"")+
-    supportCard("plus","Suggest an Idea","Share mod ideas and suggestions when submissions open.",suggest?"Available":"Coming soon",suggest?'<a class="support-action" href="'+suggest+'" target="_blank" rel="noopener noreferrer">Suggest Idea →</a>':"")+
-    supportCard("help","FAQ","Quick answers about Torqz Garage, downloads, and compatibility.","Available",'<a class="support-action" href="#faq">Open FAQ ↓</a>');
+        return (
+          '<div class="timeline-item ' +
+          milestone.status +
+          '"><i></i><div><strong>' +
+          milestone.name +
+          "</strong><span>" +
+          label +
+          "</span></div></div>"
+        );
+      })
+      .join("") +
+    "</div>"
+  );
 }
 
-function currentDevelopment(mod){
-  return '<div class="development-timeline">'+(mod.milestones||[]).map((m,i)=>{
-    const label={complete:"Complete","in-progress":"In progress",planned:i===2?"Next":"Planned",blocked:"Blocked"}[m.status]||m.status;
-    return '<div class="timeline-item '+m.status+'"><i></i><div><strong>'+m.name+'</strong><span>'+label+'</span></div></div>';
-  }).join("")+'</div>';
+function renderFeatureGrid(project) {
+  return (
+    '<div class="feature-grid project-features">' +
+    (project.features || []).map((feature, index) => featureCard(feature, index)).join("") +
+    "</div>"
+  );
 }
 
-function featureGrid(mod){
-  return '<div class="feature-grid project-features">'+(mod.features||[]).map((f,i)=>featureCard(f,i)).join("")+'</div>';
-}
+function renderMediaGallery(project) {
+  const items = [...(project.projectMedia || []), ...(project.developmentMedia || [])];
 
-function mediaGallery(mod){
-  const items=[...(mod.projectMedia||[]),...(mod.developmentMedia||[])];
-  if(!items.length)return '<div class="single-media-placeholder">'+projectMedia(mod,true)+'<p>Real BeamNG screenshots and development captures will appear here as they are made.</p></div>';
-  return '<div class="media-grid">'+items.map((item,index)=>{
-    const prefix="../";
-    const type=item.type||"image";
-    const src=prefix+(item.src||"");
-    const poster=prefix+(item.poster||"");
-    const caption=item.caption||"Torqz Garage media";
-    return '<button class="media-item" type="button" data-gallery-src="'+src+'" data-gallery-type="'+type+'" data-gallery-poster="'+poster+'" data-gallery-label="'+caption+'">'+
-      (type==="video"?'<video muted playsinline preload="metadata" '+(poster?'poster="'+poster+'"':'')+'><source src="'+src+'"></video>':'<img src="'+src+'" alt="'+caption+'" loading="lazy">')+
-      '<span>'+caption+'</span></button>';
-  }).join("")+'</div>';
-}
-
-const detail=$("[data-mod-detail]");
-if(detail){
-  const mod=getModBySlug(document.body.dataset.modSlug||"");
-  if(!mod){
-    detail.innerHTML='<section class="not-found"><div class="site-shell"><h1>Project not found.</h1>'+button("Back to Mods","../mods.html","primary")+'</div></section>';
-  }else{
-    document.title=getProjectName(mod)+" | Torqz Mods";
-    const updates=updatesForProject(mod.id);
-    const compat=mod.beamngCompatibility||{};
-    const downloadState=resolvedDownloadState(mod);
-    detail.innerHTML=
-      '<section class="project-hero"><div class="site-shell project-hero-grid">'+
-        '<div class="project-hero-media">'+projectMedia(mod,true)+'</div>'+
-        '<div class="project-hero-copy"><span class="eyebrow">'+mod.internalName+'</span><h1>'+getProjectName(mod)+'</h1><p class="project-hero-tagline">'+mod.tagline+'</p>'+statusBadge(mod.status)+'<div class="hero-actions">'+
-          '<a class="button primary" href="../updates.html">Latest Update <span>→</span></a>'+
-          '<button class="button secondary disabled" type="button" disabled>Installation — Not Released</button>'+
-        '</div></div>'+
-      '</div><div class="site-shell project-meta-row"><div><span>Category</span><strong>'+projectCategoryLabel(mod)+'</strong></div><div><span>Status</span><strong>'+mod.status+'</strong></div><div><span>Current Focus</span><strong>'+displayValue(mod.currentPhase)+'</strong></div></div></section>'+
-      '<section class="content-section"><div class="site-shell two-col-copy">'+sectionTitle("About","What is Torqz Garage?")+'<div><p>'+mod.fullDescription+'</p><p>'+mod.featureSummary+'</p></div></div></section>'+
-      '<section class="content-section alt"><div class="site-shell">'+sectionTitle("Features","Built around your cars.","Useful vehicle ownership features, with planned ideas clearly marked.")+featureGrid(mod)+'</div></section>'+
-      '<section class="content-section"><div class="site-shell two-col-copy">'+sectionTitle("Current Development","Where things are right now.")+'<div>'+currentDevelopment(mod)+'</div></div></section>'+
-      '<section class="content-section alt"><div class="site-shell">'+sectionTitle("Media","Torqz Garage media.")+mediaGallery(mod)+'</div></section>'+
-      (updates.length?'<section class="content-section"><div class="site-shell">'+sectionTitle("Latest Updates","What I’m working on.")+'<div class="updates-list">'+updates.map(u=>updateCard(u,mod,"../")).join("")+'</div></div></section>':"")+
-      '<section class="content-section alt"><div class="site-shell info-grid">'+
-        '<article><div class="info-icon">'+icon("download")+'</div><span>Installation</span><h3>Not released yet</h3><p>Install steps will be posted when Torqz Garage has a real public release.</p></article>'+
-        '<article><div class="info-icon">'+icon("car")+'</div><span>Compatibility</span><h3>'+displayValue(compat.testedVersion)+'</h3><p>Supported BeamNG.drive versions will be listed after testing.</p></article>'+
-        '<article><div class="info-icon">'+icon("bug")+'</div><span>Known Issues</span><h3>'+(mod.knownIssues?.length?mod.knownIssues.length+" listed":"None published")+'</h3><p>Useful issue information will appear here when there is something to report.</p></article>'+
-      '</div></section>'+
-      '<section class="content-section"><div class="site-shell credits"><span>Credits</span><strong>'+(mod.credits||[]).join(" · ")+'</strong></div></section>';
-    wireVideos(detail);
+  if (!items.length) {
+    return (
+      '<div class="single-media-placeholder">' +
+      projectMedia(project, true) +
+      "<p>Real BeamNG screenshots and development captures will appear here as they are made.</p></div>"
+    );
   }
+
+  return (
+    '<div class="media-grid">' +
+    items
+      .map((item) => {
+        const prefix = "../";
+        const type = item.type || "image";
+        const src = prefix + (item.src || "");
+        const poster = prefix + (item.poster || "");
+        const caption = item.caption || "Torqz Garage media";
+        return (
+          '<button class="media-item" type="button" data-gallery-src="' +
+          src +
+          '" data-gallery-type="' +
+          type +
+          '" data-gallery-poster="' +
+          poster +
+          '" data-gallery-label="' +
+          caption +
+          '">' +
+          (type === "video"
+            ? '<video muted playsinline preload="metadata" ' +
+              (poster ? 'poster="' + poster + '"' : "") +
+              '><source src="' +
+              src +
+              '"></video>'
+            : '<img src="' + src + '" alt="' + caption + '" loading="lazy">') +
+          "<span>" +
+          caption +
+          "</span></button>"
+        );
+      })
+      .join("") +
+    "</div>"
+  );
 }
 
-$$("[data-accordion-button]").forEach(button=>button.addEventListener("click",()=>{
-  const item=button.closest(".faq-item");
-  const open=item.classList.toggle("open");
-  button.setAttribute("aria-expanded",String(open));
-  const symbol=$("[data-accordion-symbol]",button);
-  if(symbol)symbol.textContent=open?"−":"+";
-}));
+function initProjectDetail() {
+  const detail = $("[data-mod-detail]");
+  if (!detail) return;
 
-let galleryItems=[];
-let galleryIndex=0;
-const lightbox=$("[data-lightbox]");
-const lightboxStage=$("[data-lightbox-stage]");
-const lightboxLabel=$("[data-lightbox-label]");
-function showLightbox(index){
-  if(!galleryItems.length||!lightboxStage||!lightbox)return;
-  galleryIndex=(index+galleryItems.length)%galleryItems.length;
-  const item=galleryItems[galleryIndex];
-  const src=item.dataset.gallerySrc||"";
-  const type=item.dataset.galleryType||"image";
-  const poster=item.dataset.galleryPoster||"";
-  const label=item.dataset.galleryLabel||"";
-  lightboxStage.innerHTML=type==="video"?'<video controls muted playsinline '+(poster?'poster="'+poster+'"':'')+'><source src="'+src+'"></video>':'<img src="'+src+'" alt="'+label+'">';
-  if(lightboxLabel)lightboxLabel.textContent=label;
-  lightbox.classList.add("open");
-  lightbox.setAttribute("aria-hidden","false");
-  document.body.classList.add("search-open");
+  const project = getModBySlug(document.body.dataset.modSlug || "");
+  if (!project) {
+    detail.innerHTML =
+      '<section class="not-found"><div class="site-shell"><h1>Project not found.</h1>' +
+      button("Back to Mods", "../mods.html", "primary") +
+      "</div></section>";
+    return;
+  }
+
+  document.title = getProjectName(project) + " — Torqz Mods";
+  const updates = updatesForProject(project.id);
+  const compatibility = project.beamngCompatibility || {};
+
+  detail.innerHTML =
+    '<section class="project-hero"><div class="site-shell project-hero-grid">' +
+    '<div class="project-hero-media">' +
+    projectMedia(project, true) +
+    '</div><div class="project-hero-copy"><span class="eyebrow">' +
+    project.internalName +
+    "</span><h1>" +
+    getProjectName(project) +
+    '</h1><p class="project-hero-tagline">' +
+    project.tagline +
+    "</p>" +
+    statusBadge(project.status) +
+    '<div class="hero-actions"><a class="button primary" href="../updates.html">Latest Update <span>→</span></a><button class="button secondary disabled" type="button" disabled>Installation — Not Released</button></div></div>' +
+    '</div><div class="site-shell project-meta-row"><div><span>Category</span><strong>' +
+    projectCategoryLabel(project) +
+    "</strong></div><div><span>Status</span><strong>" +
+    project.status +
+    "</strong></div><div><span>Current Focus</span><strong>" +
+    displayValue(project.currentPhase) +
+    "</strong></div></div></section>" +
+    '<section class="content-section"><div class="site-shell two-col-copy">' +
+    sectionTitle("Overview", "What is Torqz Garage?") +
+    "<div><p>" +
+    project.fullDescription +
+    "</p><p>" +
+    project.featureSummary +
+    "</p></div></div></section>" +
+    '<section class="content-section alt"><div class="site-shell">' +
+    sectionTitle("Features", "Built around your cars.", "Useful vehicle ownership features, with planned ideas clearly marked.") +
+    renderFeatureGrid(project) +
+    "</div></section>" +
+    '<section class="content-section"><div class="site-shell two-col-copy">' +
+    sectionTitle("Current Development", "Where things are right now.") +
+    "<div>" +
+    renderDevelopmentTimeline(project) +
+    "</div></div></section>" +
+    '<section class="content-section alt"><div class="site-shell">' +
+    sectionTitle("Media", "Torqz Garage media.") +
+    renderMediaGallery(project) +
+    "</div></section>" +
+    (updates.length
+      ? '<section class="content-section"><div class="site-shell">' +
+        sectionTitle("Latest Updates", "What I’m working on.") +
+        '<div class="updates-list">' +
+        updates.map((update) => updateCard(update, project, "../")).join("") +
+        "</div></div></section>"
+      : "") +
+    '<section class="content-section alt"><div class="site-shell info-grid">' +
+    '<article><div class="info-icon">' +
+    icon("download") +
+    '</div><span>Installation</span><h3>Not released yet</h3><p>Install steps will be posted when Torqz Garage has a real public release.</p></article>' +
+    '<article><div class="info-icon">' +
+    icon("car") +
+    '</div><span>Compatibility</span><h3>' +
+    displayValue(compatibility.testedVersion) +
+    '</h3><p>Supported BeamNG.drive versions will be listed after testing.</p></article>' +
+    '<article><div class="info-icon">' +
+    icon("bug") +
+    '</div><span>Known Issues</span><h3>' +
+    (project.knownIssues?.length ? project.knownIssues.length + " listed" : "None published") +
+    '</h3><p>Useful issue information will appear here when there is something to report.</p></article></div></section>' +
+    '<section class="content-section"><div class="site-shell credits"><span>Credits</span><strong>' +
+    (project.credits || []).join(" · ") +
+    "</strong></div></section>";
+
+  initLazyVideos(detail);
 }
-function closeLightbox(){
-  lightbox?.classList.remove("open");
-  lightbox?.setAttribute("aria-hidden","true");
-  document.body.classList.remove("search-open");
-  if(lightboxStage)lightboxStage.innerHTML="";
+
+function initUpdatesPage() {
+  const mount = $("[data-updates-list]");
+  if (!mount) return;
+  mount.innerHTML = UPDATES.map((update) => updateCard(update, projectForUpdate(update))).join("");
 }
-document.addEventListener("click",e=>{
-  const item=e.target.closest("[data-gallery-src]");
-  if(item){galleryItems=$$("[data-gallery-src]");showLightbox(galleryItems.indexOf(item));}
-});
-$("[data-lightbox-close]")?.addEventListener("click",closeLightbox);
-$("[data-lightbox-prev]")?.addEventListener("click",()=>showLightbox(galleryIndex-1));
-$("[data-lightbox-next]")?.addEventListener("click",()=>showLightbox(galleryIndex+1));
 
-document.addEventListener("click",event=>{
-  if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
-  const link=event.target.closest('a[href]');
-  if(!link||link.target==="_blank"||link.hasAttribute("download"))return;
-  const href=link.getAttribute("href")||"";
-  if(href.startsWith("#")||href.startsWith("mailto:")||href.startsWith("tel:")||href.startsWith("javascript:"))return;
-  const url=new URL(link.href,location.href);
-  if(url.origin!==location.origin)return;
-  if(url.pathname===location.pathname&&url.search===location.search)return;
-  event.preventDefault();
-  closeSearch();
-  closeMenu();
-  document.body.classList.add("page-leaving");
-  const navigate=()=>{location.href=link.href;};
-  const timer=setTimeout(navigate,190);
-  document.body.addEventListener("transitionend",event=>{
-    if(event.propertyName!=="opacity")return;
-    clearTimeout(timer);
-    navigate();
-  },{once:true});
-});
+function initSupportPage() {
+  const mount = $("[data-support-cards]");
+  if (!mount) return;
 
-window.addEventListener("pageshow",()=>{
-  document.body.classList.remove("page-leaving");
-  document.body.classList.add("page-entering");
-  setTimeout(()=>document.body.classList.remove("page-entering"),360);
-});
+  const discord = configured(SITE_CONFIG.discordUrl);
+  const bug = configured(SITE_CONFIG.bugReportUrl);
+  const suggestion = configured(SITE_CONFIG.suggestionUrl);
+
+  mount.innerHTML =
+    supportCard(
+      "help",
+      "Discord Support",
+      "Chat with the Torqz community and get help with projects.",
+      discord ? "Available" : "Coming soon",
+      discord
+        ? '<a class="support-action" href="' +
+          discord +
+          '" target="_blank" rel="noopener noreferrer">Open Discord →</a>'
+        : ""
+    ) +
+    supportCard(
+      "download",
+      "Installation Help",
+      "Find install information for Torqz projects when releases are ready.",
+      "Available",
+      '<a class="support-action" href="install.html">Open Guide →</a>'
+    ) +
+    supportCard(
+      "bug",
+      "Report a Bug",
+      "Send a bug report when the Torqz report form is ready.",
+      bug ? "Available" : "Coming soon",
+      bug
+        ? '<a class="support-action" href="' +
+          bug +
+          '" target="_blank" rel="noopener noreferrer">Report Bug →</a>'
+        : ""
+    ) +
+    supportCard(
+      "plus",
+      "Suggest an Idea",
+      "Share mod ideas and suggestions when submissions open.",
+      suggestion ? "Available" : "Coming soon",
+      suggestion
+        ? '<a class="support-action" href="' +
+          suggestion +
+          '" target="_blank" rel="noopener noreferrer">Suggest Idea →</a>'
+        : ""
+    ) +
+    supportCard(
+      "help",
+      "FAQ",
+      "Quick answers about Torqz Garage, downloads, and compatibility.",
+      "Available",
+      '<a class="support-action" href="#faq">Open FAQ ↓</a>'
+    );
+}
+
+function initFaq() {
+  $$("[data-accordion-button]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const item = button.closest(".faq-item");
+      if (!item) return;
+      const open = item.classList.toggle("open");
+      button.setAttribute("aria-expanded", String(open));
+      const symbol = $("[data-accordion-symbol]", button);
+      if (symbol) symbol.textContent = open ? "−" : "+";
+    });
+  });
+}
+
+function initLightbox() {
+  const lightbox = $("[data-lightbox]");
+  const stage = $("[data-lightbox-stage]");
+  const label = $("[data-lightbox-label]");
+  if (!lightbox || !stage) return;
+
+  let items = [];
+  let index = 0;
+  let previousFocus = null;
+
+  const render = (nextIndex) => {
+    if (!items.length) return;
+    index = (nextIndex + items.length) % items.length;
+    const item = items[index];
+    const src = item.dataset.gallerySrc || "";
+    const type = item.dataset.galleryType || "image";
+    const poster = item.dataset.galleryPoster || "";
+    const text = item.dataset.galleryLabel || "";
+
+    stage.innerHTML =
+      type === "video"
+        ? '<video controls muted playsinline ' +
+          (poster ? 'poster="' + poster + '"' : "") +
+          '><source src="' +
+          src +
+          '"></video>'
+        : '<img src="' + src + '" alt="' + text + '">';
+
+    if (label) label.textContent = text;
+  };
+
+  const close = () => {
+    lightbox.classList.remove("open");
+    lightbox.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("search-open");
+    stage.innerHTML = "";
+    previousFocus?.focus?.();
+  };
+
+  const open = (gallery, startIndex, trigger) => {
+    items = gallery;
+    previousFocus = trigger || document.activeElement;
+    render(startIndex);
+    lightbox.classList.add("open");
+    lightbox.setAttribute("aria-hidden", "false");
+    document.body.classList.add("search-open");
+    setTimeout(() => $("[data-lightbox-close]")?.focus(), 20);
+  };
+
+  document.addEventListener("click", (event) => {
+    const item = event.target.closest("[data-gallery-src]");
+    if (!item) return;
+    const gallery = $$("[data-gallery-src]");
+    open(gallery, gallery.indexOf(item), item);
+  });
+
+  $("[data-lightbox-close]")?.addEventListener("click", close);
+  $("[data-lightbox-prev]")?.addEventListener("click", () => render(index - 1));
+  $("[data-lightbox-next]")?.addEventListener("click", () => render(index + 1));
+
+  lightbox.closeLightbox = close;
+  lightbox.showPrevious = () => render(index - 1);
+  lightbox.showNext = () => render(index + 1);
+  lightbox.trap = (event) => trapFocus(event, lightbox);
+}
+
+function initPageTransitions() {
+  document.addEventListener("click", (event) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    const link = event.target.closest('a[href]');
+    if (!link || link.target === "_blank" || link.hasAttribute("download")) return;
+
+    const href = link.getAttribute("href") || "";
+    if (
+      href.startsWith("#") ||
+      href.startsWith("mailto:") ||
+      href.startsWith("tel:") ||
+      href.startsWith("javascript:")
+    ) {
+      return;
+    }
+
+    const url = new URL(link.href, location.href);
+    if (url.origin !== location.origin) return;
+    if (url.pathname === location.pathname && url.search === location.search) return;
+
+    event.preventDefault();
+    $("[data-search-overlay]")?.closeSearch?.({ restoreFocus: false });
+    $("[data-mobile-nav]")?.closeMenu?.({ restoreFocus: false });
+    document.body.classList.add("page-leaving");
+
+    const navigate = () => {
+      location.href = link.href;
+    };
+
+    const timer = setTimeout(navigate, 190);
+    document.body.addEventListener(
+      "transitionend",
+      (transitionEvent) => {
+        if (transitionEvent.propertyName !== "opacity") return;
+        clearTimeout(timer);
+        navigate();
+      },
+      { once: true }
+    );
+  });
+
+  window.addEventListener("pageshow", () => {
+    document.body.classList.remove("page-leaving");
+    document.body.classList.add("page-entering");
+    setTimeout(() => document.body.classList.remove("page-entering"), 360);
+  });
+}
+
+initDocumentState();
+initHeaderState();
+initMobileMenu();
+initSearch();
+initKeyboardShortcuts();
+initRevealMotion();
+initLazyVideos();
+initHomepage();
+initModsLibrary();
+initUpdatesPage();
+initSupportPage();
+initProjectDetail();
+initFaq();
+initLightbox();
+initPageTransitions();

@@ -107,7 +107,6 @@ export function mountFooter() {
 }
 
 export function automotiveArtwork(mod, nested = false, compact = false) {
-  const prefix = nested ? "../" : "";
   return '<div class="automotive-art ' + (compact ? "compact" : "") + '">' +
     '<div class="garage-light light-a"></div><div class="garage-light light-b"></div>' +
     '<div class="speed-arc arc-a"></div><div class="speed-arc arc-b"></div>' +
