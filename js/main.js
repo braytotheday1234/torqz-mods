@@ -390,18 +390,21 @@ function initHomepage() {
       projectMedia(featured) +
       "</div>" +
       '<div class="featured-copy">' +
-      statusBadge(featured.status, true) +
-      '<span class="eyebrow">Featured Project</span><h2>' +
+      '<span class="eyebrow">Featured Project · ' +
       getProjectName(featured) +
+      '</span><h2>' +
+      featured.tagline +
       '</h2><p class="featured-tagline">' +
       featured.subtitle +
       "</p><p>" +
       featured.shortDescription +
       '</p><div class="highlight-list">' +
       highlights +
-      '</div><a class="text-link strong" href="mods/' +
+      '</div><div class="featured-footer">' +
+      statusBadge(featured.status, true) +
+      '<a class="text-link strong" href="mods/' +
       featured.slug +
-      '.html">View Project <span>→</span></a></div>';
+      '.html">View Project <span>→</span></a></div></div>';
   }
 
   if (featuresMount && featured) {

@@ -112,10 +112,8 @@ export function automotiveArtwork(mod, nested = false, compact = false) {
     '<div class="speed-arc arc-a"></div><div class="speed-arc arc-b"></div>' +
     '<div class="road-lines"></div>' +
     '<svg class="car-outline" viewBox="0 0 900 380" aria-hidden="true"><path d="M68 245c50-8 78-28 118-78 38-48 76-71 138-82 82-14 208-17 299 0 57 11 98 34 139 72 23 21 43 45 76 55l25 8-2 36-39 8c-15 45-52 72-99 72-48 0-84-25-101-68H311c-16 43-53 68-101 68-48 0-85-27-100-72l-43-8 1-31z"/><path d="M278 111c31-49 71-73 134-81 66-8 151-3 216 15 44 12 78 35 116 75"/><path d="M332 96h266l75 28H276z"/></svg>' +
-    '<div class="art-copy"><span>' + mod.internalName + '</span><strong>' + getProjectName(mod) + '</strong><p>' + (mod.subtitle || mod.tagline || "") + '</p></div>' +
+    '<div class="art-copy"><strong>' + getProjectName(mod) + '</strong><p>' + (mod.subtitle || mod.tagline || "") + '</p></div>' +
     '<div class="art-badge">' + statusBadge(mod.status,true) + '</div>' +
-    '<div class="art-annotation"><i></i><span>PROJECT 01 / GARAGE CONCEPT</span></div>' +
-    '<div class="art-data"><span>BeamNG.drive</span><span>Creator build</span><span>Visual placeholder</span></div>' +
   '</div>';
 }
 
