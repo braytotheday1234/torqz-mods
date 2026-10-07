@@ -57,9 +57,9 @@ export function mountHeader(active = "") {
 
   target.innerHTML =
     '<a class="skip-link" href="#main-content">Skip to content</a>' +
-    '<header class="site-header" data-header><div class="site-shell nav-shell">' +
+    '<header class="site-header" data-header><div class="site-header-background" aria-hidden="true"></div><div class="site-shell nav-shell">' +
       '<a class="brand" href="' + href("index.html") + '" aria-label="Torqz Mods home">' +
-        '<img src="' + logo() + '" alt="Torqz Mods" width="44" height="44" loading="eager" decoding="sync" fetchpriority="high">' +
+        '<img class="brand-logo" src="' + logo() + '" alt="Torqz Mods" width="44" height="44" loading="eager" decoding="sync" fetchpriority="high">' +
         '<span><strong>TORQZ</strong><small>MODS</small></span>' +
       '</a>' +
       '<nav class="desktop-nav" aria-label="Primary navigation">' + nav + '</nav>' +
