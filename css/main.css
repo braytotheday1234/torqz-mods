@@ -44,7 +44,7 @@ button{cursor:pointer}
 .site-header.scrolled{background:rgba(7,10,16,.94);backdrop-filter:blur(18px) saturate(120%);border-color:rgba(151,211,255,.1)}
 .nav-shell{height:72px;display:flex;align-items:center;gap:34px}
 .brand{display:flex;align-items:center;gap:11px;flex:0 0 auto;position:relative;z-index:2}
-.brand img{display:block;width:44px;height:44px;object-fit:contain;border-radius:50%;opacity:1;visibility:visible;transform:translateZ(0);transition:transform var(--motion-normal) var(--ease-out),filter var(--motion-normal) var(--ease-out)}
+.brand img{display:block;width:44px;height:44px;object-fit:contain;border-radius:50%;opacity:1;visibility:visible;transform:none;filter:none;transition:transform var(--motion-normal) var(--ease-out),filter var(--motion-normal) var(--ease-out)}
 .brand:hover img,.brand:focus-visible img{transform:scale(1.02);filter:brightness(1.08) drop-shadow(0 0 12px rgba(79,220,255,.16))}
 .brand span{display:grid;line-height:.9}
 .brand strong{font-size:15px;letter-spacing:.12em}
