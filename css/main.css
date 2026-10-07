@@ -713,3 +713,424 @@ body{
   .content-section+.content-section:before{width:calc(100% - 28px)}
   .footer-main{gap:28px}
 }
+
+/* ===== Torqz Mods V10 — immersive color, interaction & depth polish ===== */
+:root{
+  --accent:#f26a2d;
+  --accent-soft:rgba(242,106,45,.14);
+  --accent-glow:rgba(242,106,45,.22);
+  --brand-blue:#1f73ff;
+  --blue-soft:rgba(31,115,255,.12);
+  --surface:#12151a;
+  --surface-2:#171b21;
+  --surface-3:#1d2229;
+  --line:#2d343d;
+  --line-bright:#414a55;
+  --shadow:0 24px 60px rgba(0,0,0,.32);
+}
+body{
+  background:
+    radial-gradient(circle at 78% 4%,rgba(31,115,255,.045),transparent 22%),
+    radial-gradient(circle at 18% 16%,rgba(242,106,45,.035),transparent 20%),
+    linear-gradient(180deg,#08090b 0%,#0a0c0f 38%,#08090b 100%);
+}
+.site-header{
+  background:linear-gradient(180deg,rgba(8,9,11,.24),rgba(8,9,11,.04));
+}
+.site-header.scrolled{
+  background:linear-gradient(180deg,rgba(7,8,10,.96),rgba(9,10,12,.91));
+  backdrop-filter:blur(22px) saturate(125%);
+  border-color:rgba(255,255,255,.1);
+  box-shadow:0 16px 36px rgba(0,0,0,.18);
+}
+.desktop-nav a,
+.search-trigger,
+.discord-link,
+.button,
+.filter-chip,
+.project-card,
+.feature-card,
+.support-card,
+.about-block,
+.update-card{
+  transition:
+    transform .18s ease,
+    border-color .18s ease,
+    background-color .18s ease,
+    color .18s ease,
+    box-shadow .18s ease,
+    opacity .18s ease;
+}
+.desktop-nav a:after{
+  box-shadow:0 0 12px rgba(242,106,45,.28);
+}
+.search-trigger:hover{
+  transform:translateY(-1px);
+  background:linear-gradient(180deg,#1a1e24,#15191e);
+  border-color:#434c57;
+  box-shadow:0 8px 20px rgba(0,0,0,.18),0 0 0 1px rgba(242,106,45,.035);
+}
+.search-trigger:active,
+.discord-link:active,
+.button:active,
+.filter-chip:active{
+  transform:translateY(0) scale(.985);
+}
+.discord-link:not(.soon){
+  box-shadow:0 8px 20px rgba(242,106,45,.15),inset 0 1px 0 rgba(255,255,255,.14);
+}
+.discord-link:not(.soon):hover{
+  transform:translateY(-1px);
+  box-shadow:0 11px 24px rgba(242,106,45,.2),0 0 18px rgba(242,106,45,.08);
+}
+.button{
+  position:relative;
+  overflow:hidden;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+}
+.button:before{
+  content:"";
+  position:absolute;
+  inset:0 auto 0 -45%;
+  width:35%;
+  pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.14),transparent);
+  transform:skewX(-18deg);
+  opacity:0;
+}
+.button:hover:before{
+  left:115%;
+  opacity:1;
+  transition:left .48s ease,opacity .16s ease;
+}
+.button.primary{
+  background:linear-gradient(180deg,#ff7436,#e95e24);
+  border-color:#ff7a3d;
+  box-shadow:0 10px 26px rgba(242,106,45,.18),inset 0 1px 0 rgba(255,255,255,.16);
+}
+.button.primary:hover{
+  transform:translateY(-2px) scale(1.01);
+  background:linear-gradient(180deg,#ff8248,#f36a2d);
+  box-shadow:0 14px 32px rgba(242,106,45,.23),0 0 20px rgba(242,106,45,.08),inset 0 1px 0 rgba(255,255,255,.18);
+}
+.button.secondary:hover{
+  transform:translateY(-1px);
+  background:linear-gradient(180deg,#1d2228,#171b20);
+  border-color:#46505c;
+  box-shadow:0 10px 22px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.text-link:hover{color:#fff}
+.status-badge,
+.update-pill,
+.feature-state,
+.support-state{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+.home-hero{
+  background:
+    radial-gradient(circle at 76% 36%,rgba(242,106,45,.15),transparent 24%),
+    radial-gradient(circle at 91% 19%,rgba(31,115,255,.08),transparent 21%),
+    radial-gradient(circle at 45% 4%,rgba(255,255,255,.035),transparent 23%),
+    linear-gradient(135deg,#08090b 0%,#0d1014 54%,#12161b 100%);
+}
+.home-hero:before{
+  background:
+    linear-gradient(116deg,transparent 0 57%,rgba(255,255,255,.038) 57.2%,transparent 58.1%),
+    linear-gradient(102deg,transparent 0 70%,rgba(242,106,45,.035) 70.2%,transparent 71%),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 1px,transparent 1px 42px),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0 1px,transparent 1px 42px);
+  mask-image:linear-gradient(to right,transparent 0 33%,#000 67%,transparent 100%);
+  opacity:.95;
+}
+.home-hero:after{
+  height:150px;
+  background:
+    linear-gradient(180deg,transparent,rgba(4,5,6,.55)),
+    linear-gradient(90deg,transparent 0 70%,rgba(242,106,45,.035));
+}
+.home-hero-copy{
+  position:relative;
+}
+.home-hero-copy:after{
+  content:"";
+  position:absolute;
+  width:140px;
+  height:2px;
+  left:0;
+  bottom:-26px;
+  background:linear-gradient(90deg,var(--accent),rgba(31,115,255,.35),transparent);
+  opacity:.6;
+}
+.hero-project-card{
+  border-color:#333a44;
+  background:linear-gradient(145deg,#111419,#171b20);
+  box-shadow:
+    0 34px 80px rgba(0,0,0,.4),
+    0 0 70px rgba(242,106,45,.05),
+    0 0 48px rgba(31,115,255,.025);
+}
+.hero-project-card:before{
+  border-color:rgba(255,255,255,.05);
+  box-shadow:inset 0 0 28px rgba(255,255,255,.012);
+}
+.hero-project-card:hover{
+  transform:translateY(-4px);
+  border-color:#46505a;
+  box-shadow:
+    0 42px 92px rgba(0,0,0,.44),
+    0 0 86px rgba(242,106,45,.07),
+    0 0 58px rgba(31,115,255,.035);
+}
+.hero-project-card .automotive-art{
+  background:
+    radial-gradient(circle at 76% 21%,rgba(242,106,45,.22),transparent 23%),
+    radial-gradient(circle at 57% 38%,rgba(31,115,255,.11),transparent 27%),
+    linear-gradient(145deg,#0d1014,#171b21 56%,#0d1013);
+}
+.hero-project-card .automotive-art:before{
+  opacity:.6;
+}
+.garage-light{
+  opacity:.28;
+}
+.light-a{background:linear-gradient(#fff,rgba(255,255,255,.02))}
+.light-b{background:linear-gradient(rgba(174,210,255,.92),rgba(255,255,255,.015))}
+.speed-arc{
+  border-color:rgba(255,255,255,.085);
+  border-left-color:rgba(242,106,45,.5);
+}
+.car-outline{
+  stroke:rgba(236,240,244,.36);
+  filter:
+    drop-shadow(0 0 12px rgba(255,255,255,.025))
+    drop-shadow(0 0 18px rgba(242,106,45,.035));
+}
+.car-outline path:nth-child(2){stroke:rgba(242,106,45,.34)}
+.car-outline path:nth-child(3){stroke:rgba(31,115,255,.22)}
+.art-data span:last-child{color:#7d8792}
+.content-section{
+  background-image:
+    radial-gradient(circle at 96% 50%,rgba(31,115,255,.018),transparent 18%);
+}
+.content-section.alt{
+  background:
+    radial-gradient(circle at 6% 28%,rgba(242,106,45,.025),transparent 18%),
+    radial-gradient(circle at 94% 80%,rgba(31,115,255,.025),transparent 17%),
+    linear-gradient(180deg,rgba(255,255,255,.009),transparent 34%),
+    #0d0f12;
+}
+.content-section+.content-section:before{
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.055) 20%,rgba(242,106,45,.2) 50%,rgba(31,115,255,.06) 70%,transparent);
+}
+.home-featured,
+.project-card,
+.feature-card,
+.support-card,
+.about-block,
+.info-grid article{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.013),transparent 25%),
+    linear-gradient(145deg,#12151a,#101318);
+  border-color:#2f363f;
+  box-shadow:
+    0 14px 30px rgba(0,0,0,.14),
+    inset 0 1px 0 rgba(255,255,255,.025);
+}
+.home-featured:hover,
+.project-card:hover,
+.feature-card:hover,
+.support-card:hover,
+.about-block:hover{
+  border-color:#434c57;
+  box-shadow:
+    0 18px 36px rgba(0,0,0,.2),
+    0 0 24px rgba(242,106,45,.035),
+    inset 0 1px 0 rgba(255,255,255,.035);
+}
+.home-featured:before,
+.project-card:before{
+  height:3px;
+  width:86px;
+  background:linear-gradient(90deg,var(--accent),rgba(31,115,255,.35),transparent);
+}
+.feature-card:hover{
+  transform:translateY(-3px);
+}
+.feature-card:hover .feature-icon{
+  color:#ff8a52;
+  box-shadow:0 0 22px rgba(242,106,45,.15);
+}
+.feature-icon{
+  background:
+    linear-gradient(145deg,rgba(242,106,45,.13),rgba(31,115,255,.025));
+  border:1px solid rgba(242,106,45,.08);
+}
+.update-card{
+  border-bottom-color:#2d343d;
+}
+.update-card:hover{
+  background:
+    linear-gradient(90deg,rgba(242,106,45,.05),rgba(31,115,255,.015) 55%,transparent 78%);
+}
+.update-pill{
+  background:linear-gradient(180deg,rgba(242,106,45,.09),rgba(242,106,45,.045));
+}
+.update-card-accent{
+  background:
+    radial-gradient(circle at 78% 20%,rgba(31,115,255,.06),transparent 28%),
+    radial-gradient(circle at 82% 74%,rgba(242,106,45,.08),transparent 30%),
+    linear-gradient(145deg,#12151a,#1a1e24);
+}
+.page-hero{
+  background:
+    radial-gradient(circle at 82% 36%,rgba(242,106,45,.05),transparent 22%),
+    radial-gradient(circle at 92% 12%,rgba(31,115,255,.04),transparent 18%),
+    linear-gradient(180deg,#0d0f12,#090a0c);
+}
+.mods-toolbar{
+  padding:12px 0 22px;
+}
+.mod-search,
+.toolbar-end select{
+  background:linear-gradient(180deg,#15191e,#111419);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+.mod-search:focus-within{
+  border-color:rgba(242,106,45,.45);
+  box-shadow:0 0 0 3px rgba(242,106,45,.06),inset 0 1px 0 rgba(255,255,255,.03);
+}
+.toolbar-end select:focus{
+  outline:none;
+  border-color:rgba(242,106,45,.45);
+  box-shadow:0 0 0 3px rgba(242,106,45,.06);
+}
+.filter-chip{
+  background:linear-gradient(180deg,#13171c,#101318);
+}
+.filter-chip:hover{
+  transform:translateY(-1px);
+  background:#1a1f25;
+  border-color:#46505b;
+}
+.filter-chip.active{
+  border-color:rgba(242,106,45,.42);
+  background:linear-gradient(180deg,rgba(242,106,45,.11),#171b20);
+  color:#fff;
+  box-shadow:0 0 14px rgba(242,106,45,.055);
+}
+.project-card:hover .project-card-media .automotive-art{
+  filter:saturate(1.04) brightness(1.025);
+}
+.project-card:hover .car-outline{
+  stroke:rgba(245,248,250,.42);
+}
+.about-block:first-child{
+  background:
+    radial-gradient(circle at 86% 12%,rgba(242,106,45,.055),transparent 25%),
+    linear-gradient(145deg,#12151a,#101318);
+}
+.about-block:nth-child(2){
+  background:
+    radial-gradient(circle at 85% 10%,rgba(31,115,255,.05),transparent 24%),
+    linear-gradient(145deg,#12151a,#101318);
+}
+.about-block:nth-child(3){
+  background:
+    linear-gradient(160deg,rgba(255,255,255,.018),transparent 45%),
+    linear-gradient(145deg,#12151a,#101318);
+}
+.support-card:hover .support-icon{
+  transform:translateY(-1px);
+  color:#ff8c56;
+}
+.support-icon{
+  transition:transform .18s ease,color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.support-state:not(.muted){
+  color:#b5e0be;
+}
+.support-state:not(.muted):before{
+  box-shadow:0 0 10px rgba(121,191,137,.34);
+}
+.faq-item>button{
+  transition:color .18s ease,padding-left .18s ease,background .18s ease;
+}
+.faq-item:hover>button{
+  padding-left:8px;
+}
+.search-backdrop{
+  background:
+    radial-gradient(circle at 50% 18%,rgba(242,106,45,.05),transparent 30%),
+    rgba(0,0,0,.72);
+  backdrop-filter:blur(10px) saturate(110%);
+}
+.search-panel{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.012),transparent 22%),
+    #0d1013;
+  border-color:#414954;
+  box-shadow:
+    0 34px 82px rgba(0,0,0,.56),
+    0 0 0 1px rgba(242,106,45,.035),
+    0 0 42px rgba(242,106,45,.055),
+    0 0 34px rgba(31,115,255,.025);
+}
+.search-field{
+  transition:background .18s ease,box-shadow .18s ease;
+}
+.search-field:focus-within{
+  background:linear-gradient(90deg,rgba(242,106,45,.035),rgba(31,115,255,.018),#111419 72%);
+  box-shadow:inset 0 0 0 1px rgba(242,106,45,.2);
+}
+.search-result{
+  transition:background .15s ease,border-color .15s ease,transform .15s ease;
+}
+.search-result:hover{
+  transform:translateX(2px);
+}
+.search-result.selected{
+  background:
+    linear-gradient(90deg,rgba(242,106,45,.1),rgba(31,115,255,.025) 58%,#15191e);
+  border-color:rgba(242,106,45,.26);
+}
+.site-footer{
+  background:
+    radial-gradient(circle at 10% 0%,rgba(242,106,45,.035),transparent 20%),
+    radial-gradient(circle at 90% 100%,rgba(31,115,255,.025),transparent 18%),
+    linear-gradient(180deg,#0b0d10,#090b0e);
+}
+.site-footer:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.18;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,transparent 1px 54px);
+  mask-image:linear-gradient(to bottom,transparent,#000 40%,transparent 100%);
+}
+.footer-main,.footer-bottom{position:relative;z-index:1}
+@keyframes torqzAmbientShift{
+  0%,100%{filter:saturate(1) brightness(1)}
+  50%{filter:saturate(1.04) brightness(1.015)}
+}
+@media(min-width:921px) and (prefers-reduced-motion:no-preference){
+  .hero-project-card{animation:torqzAmbientShift 9s ease-in-out infinite}
+}
+@media(max-width:700px){
+  body{
+    background:linear-gradient(180deg,#08090b,#090a0c 40%,#08090b);
+  }
+  .home-hero{
+    background:
+      radial-gradient(circle at 82% 24%,rgba(242,106,45,.08),transparent 22%),
+      linear-gradient(145deg,#090a0c,#0d1014);
+  }
+  .hero-project-card{box-shadow:0 22px 50px rgba(0,0,0,.34)}
+  .content-section{background-image:none}
+  .content-section.alt{
+    background:#0d0f12;
+  }
+  .faq-item:hover>button{padding-left:0}
+  .search-result:hover{transform:none}
+}
