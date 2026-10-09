@@ -390,12 +390,10 @@ function initHomepage() {
       projectMedia(featured) +
       "</div>" +
       '<div class="featured-copy">' +
-      '<span class="eyebrow">Featured Project · ' +
+      '<span class="eyebrow">Project 01 / Featured Build</span><h2>' +
       getProjectName(featured) +
-      '</span><h2>' +
-      featured.tagline +
       '</h2><p class="featured-tagline">' +
-      featured.subtitle +
+      featured.tagline +
       "</p><p>" +
       featured.shortDescription +
       '</p><div class="highlight-list">' +
@@ -498,7 +496,9 @@ function renderDevelopmentTimeline(project) {
         return (
           '<div class="timeline-item ' +
           milestone.status +
-          '"><i></i><div><strong>' +
+          '"><span class="timeline-number" aria-hidden="true">' +
+          String(index + 1).padStart(2, "0") +
+          '</span><div><strong>' +
           milestone.name +
           "</strong><span>" +
           label +

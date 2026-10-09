@@ -134,7 +134,7 @@ export function projectCard(mod, base = "") {
   return '<article class="project-card">' +
     '<a class="project-card-media" href="' + base + 'mods/' + mod.slug + '.html">' + projectMedia(mod,false,true) + '</a>' +
     '<div class="project-card-body"><div class="project-card-meta"><span>' + projectCategoryLabel(mod) + '</span>' + statusBadge(mod.status,true) + '</div>' +
-    '<h3><a href="' + base + 'mods/' + mod.slug + '.html">' + getProjectName(mod) + '</a></h3><p>' + mod.subtitle + '</p><a class="text-link" href="' + base + 'mods/' + mod.slug + '.html">View Project <span>→</span></a></div>' +
+    '<h3><a href="' + base + 'mods/' + mod.slug + '.html">' + getProjectName(mod) + '</a></h3><p>' + mod.subtitle + '</p><div class="project-card-features">' + (mod.features || []).slice(0,3).map(feature=>'<span>' + feature.title + '</span>').join('') + '</div><a class="text-link" href="' + base + 'mods/' + mod.slug + '.html">Explore Torqz Garage <span>→</span></a></div>' +
   '</article>';
 }
 
