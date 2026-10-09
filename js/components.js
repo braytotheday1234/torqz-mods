@@ -65,12 +65,17 @@ export function mountHeader(active = "") {
       '<nav class="desktop-nav" aria-label="Primary navigation">' + nav + '</nav>' +
       '<div class="nav-actions">' +
         '<button class="search-trigger" type="button" data-search-trigger>' + icon("search") + '<span>Search</span><kbd data-search-shortcut>Ctrl K</kbd></button>' +
+        '<button class="theme-trigger" type="button" data-theme-toggle aria-expanded="false" aria-haspopup="true" aria-controls="theme-popover" aria-label="Choose color theme"><span class="theme-trigger-dot" aria-hidden="true"></span><span class="theme-trigger-text">Theme</span></button>' +
         (discord
           ? '<a class="discord-link" href="' + discord + '" target="_blank" rel="noopener noreferrer">Discord</a>'
           : '<button class="discord-link soon" type="button" data-placeholder-link>Discord <small>Soon</small></button>') +
         '<button class="menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu"><i></i><i></i></button>' +
       '</div>' +
-    '</div><nav class="mobile-nav" id="mobile-menu" data-mobile-nav aria-hidden="true">' +
+    '</div><div class="theme-popover" id="theme-popover" data-theme-popover hidden><div class="theme-popover-head"><strong>Choose your look</strong><span>Saved on this device</span></div>' +
+      '<button type="button" data-theme-choice="carbon" class="theme-choice"><span class="theme-swatches"><i style="background:#0b0d11"></i><i style="background:#d94b59"></i><i style="background:#d7a77c"></i></span><span>Carbon &amp; Crimson</span><b aria-hidden="true">✓</b></button>' +
+      '<button type="button" data-theme-choice="copper" class="theme-choice"><span class="theme-swatches"><i style="background:#0d0e10"></i><i style="background:#cb835d"></i><i style="background:#c7cdd2"></i></span><span>Titanium &amp; Copper</span><b aria-hidden="true">✓</b></button>' +
+      '<button type="button" data-theme-choice="violet" class="theme-choice"><span class="theme-swatches"><i style="background:#0b0b12"></i><i style="background:#9884e8"></i><i style="background:#d3c9f5"></i></span><span>Obsidian &amp; Violet</span><b aria-hidden="true">✓</b></button></div>' +
+    '<nav class="mobile-nav" id="mobile-menu" data-mobile-nav aria-hidden="true">' +
       '<div class="mobile-nav-head"><div class="brand mini"><span class="header-logo-mark" aria-hidden="true"></span><span><strong>TORQZ</strong><small>MODS</small></span></div><button type="button" data-menu-close aria-label="Close menu">×</button></div>' +
       '<div class="mobile-nav-links">' + nav + '</div>' +
       (discord ? '<a class="mobile-discord" href="' + discord + '" target="_blank" rel="noopener noreferrer">Discord ↗</a>' : '<div class="mobile-discord muted">Discord <small>Coming soon</small></div>') +
@@ -78,8 +83,8 @@ export function mountHeader(active = "") {
     '<div class="search-modal" data-search-overlay aria-hidden="true">' +
       '<button class="search-backdrop" type="button" data-search-close aria-label="Close search"></button>' +
       '<section class="search-panel" role="dialog" aria-modal="true" aria-labelledby="search-title" tabindex="-1" data-search-dialog>' +
-        '<div class="search-head"><div><span>Quick Search</span><strong id="search-title">Find a Torqz project</strong></div><button type="button" data-search-close aria-label="Close search">×</button></div>' +
-        '<label class="search-field">' + icon("search") + '<input type="search" autocomplete="off" placeholder="Search Torqz Garage…" data-global-search></label>' +
+        '<div class="search-head"><div><span>Quick Search</span><strong id="search-title">Search the Torqz site</strong></div><button type="button" data-search-close aria-label="Close search">×</button></div>' +
+        '<label class="search-field">' + icon("search") + '<input type="search" autocomplete="off" placeholder="Projects, help, updates, FAQs…" data-global-search></label>' +
         '<div class="search-results" data-search-results aria-live="polite"></div>' +
         '<div class="search-hint"><span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>Enter</kbd> open</span><span><kbd>Esc</kbd> close</span></div>' +
       '</section>' +
@@ -93,7 +98,7 @@ export function mountFooter() {
     '<footer class="site-footer"><div class="site-shell footer-main">' +
       '<div class="footer-brand"><img src="' + logo() + '" alt="Torqz Mods" width="76" height="76" loading="lazy" decoding="async"><div><strong>TORQZ MODS</strong><p>Original BeamNG.drive projects.</p></div></div>' +
       '<div class="footer-group"><h2>Projects</h2><a href="' + href("mods.html") + '">Mods</a><a href="' + href("updates.html") + '">Updates</a><a href="' + href("mods/project-01.html") + '">Torqz Garage</a></div>' +
-      '<div class="footer-group"><h2>Company</h2><a href="' + href("about.html") + '">About</a><a href="' + href("support.html") + '">Support</a></div>' +
+      '<div class="footer-group"><h2>Explore</h2><a href="' + href("about.html") + '">About</a><a href="' + href("support.html") + '">Support Center</a><a href="' + href("help.html") + '">Troubleshooting</a><a href="' + href("known-issues.html") + '">Known Issues</a></div>' +
       '<div class="footer-group footer-socials"><h2>Community</h2>' + socialLink("Discord",SITE_CONFIG.discordUrl) + socialLink("YouTube",SITE_CONFIG.youtubeUrl) + socialLink("TikTok",SITE_CONFIG.tiktokUrl) + '</div>' +
     '</div><div class="site-shell footer-bottom"><span>© <span data-year></span> Torqz Mods</span><span>Not affiliated with BeamNG GmbH.</span></div></footer>' +
     '<div class="toast" data-toast role="status" aria-live="polite"></div>' +
@@ -147,7 +152,7 @@ export function featureCard(feature, index = 0) {
 
 export function updateCard(update, project = null, prefix = "") {
   const pill = update.category || (project ? project.internalName : "Torqz");
-  return '<article class="update-card">' +
+  return '<article class="update-card" id="update-' + update.id + '">' +
     '<div class="update-card-date"><span>' + update.displayDate + '</span></div>' +
     '<div class="update-card-copy"><span class="update-pill">' + pill + '</span><span class="update-eyebrow">' + (project ? getProjectName(project) : "Torqz Mods") + '</span><h3>' + update.title + '</h3><p>' + update.description + '</p>' +
       (project ? '<a class="text-link" href="' + prefix + 'mods/' + project.slug + '.html">Read Update <span>→</span></a>' : '') +

@@ -13,7 +13,7 @@ export const SITE_CONFIG = Object.freeze({
   bugReportUrl: "",
   suggestionUrl: "",
   contactEmail: "",
-  accent: "#d7ff45"
+  accent: "#d94b59"
 });
 
 export function configured(value) {

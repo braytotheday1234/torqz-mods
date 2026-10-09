@@ -8,6 +8,16 @@ import {
   projectCategoryLabel
 } from "./mods.js";
 import { UPDATES, updatesForProject } from "./updates.js";
+import { initThemePicker } from "./theme.js";
+import {
+  escapeHtml,
+  initSupportFeatures,
+  initHelpGuides,
+  initKnownIssues,
+  initReportBuilders,
+  initUpdatesFilters,
+  buildSiteSearchCatalog
+} from "./features.js";
 import {
   mountHeader,
   mountFooter,
@@ -162,45 +172,33 @@ function initSearch() {
   let selectedIndex = -1;
   let previousFocus = null;
 
+  const catalog = buildSiteSearchCatalog();
+  const groupOrder = ["Projects","FAQ","Troubleshooting","Known Issues","Updates","Help Pages"];
   const render = () => {
     const query = input.value.trim().toLowerCase();
-
+    selectedIndex = -1;
     if (!query) {
-      results.innerHTML =
-        '<div class="search-empty"><strong>Search Torqz Mods</strong><span>Try “Torqz Garage”, “mileage”, or “vehicle data”.</span></div>';
-      selectedIndex = -1;
+      results.innerHTML = '<div class="search-empty"><strong>Search Torqz Mods</strong><span>Try “Garage”, “logs”, “download”, “mileage”, or “report”.</span></div>';
       return;
     }
-
-    const matches = MODS.filter((project) => projectSearchText(project).includes(query));
+    const matches = catalog.filter(entry =>
+      [entry.title,entry.subtitle,entry.terms,entry.kind].join(" ").toLowerCase().includes(query)
+    ).slice(0,35);
     if (!matches.length) {
-      results.innerHTML =
-        '<div class="search-empty"><strong>No project found.</strong><span>Try another search.</span></div>';
-      selectedIndex = -1;
+      results.innerHTML = '<div class="search-empty"><strong>No matching results.</strong><span>Try another keyword or a shorter phrase.</span></div>';
       return;
     }
-
-    results.innerHTML = matches
-      .map(
-        (project, index) =>
-          '<a class="search-result ' +
-          (index === 0 ? "selected" : "") +
-          '" href="' +
-          base +
-          "mods/" +
-          project.slug +
-          '.html" data-search-result>' +
-          '<div class="search-result-thumb">' +
-          projectMedia(project, false, true) +
-          "</div>" +
-          "<div><strong>" +
-          getProjectName(project) +
-          "</strong><span>" +
-          project.subtitle +
-          "</span></div><b>→</b></a>"
-      )
-      .join("");
-    selectedIndex = 0;
+    results.innerHTML = groupOrder.map(kind => {
+      const entries = matches.filter(e=>e.kind===kind);
+      if(!entries.length)return "";
+      return '<div class="search-result-group"><div class="search-group-heading">'+escapeHtml(kind)+'</div>'+
+        entries.map(e=>
+          '<a class="search-result" data-search-result href="'+base+escapeHtml(e.href)+'">'+
+          '<span class="search-kind-mark" aria-hidden="true">↗</span><span class="search-result-copy"><strong>'+escapeHtml(e.title)+'</strong><span>'+escapeHtml(e.subtitle)+'</span></span><b aria-hidden="true">→</b></a>'
+        ).join("")+'</div>';
+    }).join("");
+    const first = $("[data-search-result]", results);
+    if(first){first.classList.add("selected");selectedIndex=0;}
   };
 
   const closeSearch = ({ restoreFocus = true } = {}) => {
@@ -594,7 +592,7 @@ function initProjectDetail() {
     project.tagline +
     "</p>" +
     statusBadge(project.status) +
-    '<div class="hero-actions"><a class="button primary" href="../updates.html">Latest Update <span>→</span></a><button class="button secondary disabled" type="button" disabled>Installation — Not Released</button></div></div>' +
+    '<div class="hero-actions"><a class="button primary" href="../updates.html' + (updates.length ? '#update-' + updates[0].id : '') + '">Latest Update <span>→</span></a><button class="button secondary disabled" type="button" disabled>Installation — Not Released</button></div></div>' +
     '</div><div class="site-shell project-meta-row"><div><span>Category</span><strong>' +
     projectCategoryLabel(project) +
     "</strong></div><div><span>Status</span><strong>" +
@@ -642,7 +640,12 @@ function initProjectDetail() {
     icon("bug") +
     '</div><span>Known Issues</span><h3>' +
     (project.knownIssues?.length ? project.knownIssues.length + " listed" : "None published") +
-    '</h3><p>Useful issue information will appear here when there is something to report.</p></article></div></section>' +
+    '</h3><p>Only verified published issues are listed.</p><a class="text-link" href="../known-issues.html">View Issues <span>→</span></a></article></div></section>' +
+    '<section class="content-section"><div class="site-shell project-status-strip"><div><span class="eyebrow">Verified project status</span><h2>Currently building: ' +
+    displayValue(project.currentPhase) +
+    '</h2><p>Availability: Not released. No public download or verified compatibility has been announced.</p>' +
+    (updates.length ? '<p>Latest verified entry: ' + updates[0].displayDate + ' — ' + updates[0].title + '</p>' : '') +
+    '</div><div class="project-status-actions"><a class="button primary" href="../updates.html">Development Updates <span>→</span></a><a class="button secondary" href="../support.html">Need Help? <span>→</span></a><a class="text-link" href="../known-issues.html">Known Issues <span>→</span></a></div></div></section>' +
     '<section class="content-section"><div class="site-shell credits"><span>Credits</span><strong>' +
     (project.credits || []).join(" · ") +
     "</strong></div></section>";
@@ -659,71 +662,31 @@ function initUpdatesPage() {
 function initSupportPage() {
   const mount = $("[data-support-cards]");
   if (!mount) return;
-
   const discord = configured(SITE_CONFIG.discordUrl);
-  const bug = configured(SITE_CONFIG.bugReportUrl);
-  const suggestion = configured(SITE_CONFIG.suggestionUrl);
-
   mount.innerHTML =
-    supportCard(
-      "help",
-      "Discord Support",
-      "Chat with the Torqz community and get help with projects.",
-      discord ? "Available" : "Coming soon",
-      discord
-        ? '<a class="support-action" href="' +
-          discord +
-          '" target="_blank" rel="noopener noreferrer">Open Discord →</a>'
-        : ""
-    ) +
-    supportCard(
-      "download",
-      "Installation Help",
-      "Find install information for Torqz projects when releases are ready.",
-      "Available",
-      '<a class="support-action" href="install.html">Open Guide →</a>'
-    ) +
-    supportCard(
-      "bug",
-      "Report a Bug",
-      "Send a bug report when the Torqz report form is ready.",
-      bug ? "Available" : "Coming soon",
-      bug
-        ? '<a class="support-action" href="' +
-          bug +
-          '" target="_blank" rel="noopener noreferrer">Report Bug →</a>'
-        : ""
-    ) +
-    supportCard(
-      "plus",
-      "Suggest an Idea",
-      "Share mod ideas and suggestions when submissions open.",
-      suggestion ? "Available" : "Coming soon",
-      suggestion
-        ? '<a class="support-action" href="' +
-          suggestion +
-          '" target="_blank" rel="noopener noreferrer">Suggest Idea →</a>'
-        : ""
-    ) +
-    supportCard(
-      "help",
-      "FAQ",
-      "Quick answers about Torqz Garage, downloads, and compatibility.",
-      "Available",
-      '<a class="support-action" href="#faq">Open FAQ ↓</a>'
-    );
+    supportCard("help","Discord Support","Community support will be linked when the server is officially available.",
+      discord ? "Available" : "Coming soon", discord
+      ? '<a class="support-action" href="'+discord+'" target="_blank" rel="noopener noreferrer">Open Discord →</a>' : "") +
+    supportCard("download","Installation Help","Current release status and general BeamNG installation guidance.","Available",
+      '<a class="support-action" href="install.html">Open Guide →</a>') +
+    supportCard("bug","Prepare Bug Report","Write reproduction steps, generate a report, and copy it. No submission.","Local tool",
+      '<a class="support-action" href="report.html#bug">Build Report →</a>') +
+    supportCard("plus","Feature Suggestions","Prepare a detailed, copy-ready idea for a Torqz project.","Local tool",
+      '<a class="support-action" href="report.html#idea">Build Suggestion →</a>') +
+    supportCard("help","Searchable FAQ","Find answers about downloads, development, installation, and more.","Available",
+      '<a class="support-action" href="#faq">Browse FAQ ↓</a>');
 }
 
 function initFaq() {
-  $$("[data-accordion-button]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const item = button.closest(".faq-item");
-      if (!item) return;
-      const open = item.classList.toggle("open");
-      button.setAttribute("aria-expanded", String(open));
-      const symbol = $("[data-accordion-symbol]", button);
-      if (symbol) symbol.textContent = open ? "−" : "+";
-    });
+  document.addEventListener("click", event => {
+    const button=event.target.closest("[data-accordion-button]");
+    if (!button) return;
+    const item=button.closest(".faq-item");
+    if (!item) return;
+    const expanded=item.classList.toggle("open");
+    button.setAttribute("aria-expanded",String(expanded));
+    const symbol=$("[data-accordion-symbol]",button);
+    if (symbol) symbol.textContent=expanded ? "−" : "+";
   });
 }
 
@@ -852,6 +815,7 @@ function initPageTransitions() {
 }
 
 initDocumentState();
+initThemePicker();
 initHeaderState();
 initMobileMenu();
 initSearch();
@@ -861,7 +825,12 @@ initLazyVideos();
 initHomepage();
 initModsLibrary();
 initUpdatesPage();
+initUpdatesFilters();
 initSupportPage();
+initSupportFeatures();
+initHelpGuides();
+initKnownIssues();
+initReportBuilders();
 initProjectDetail();
 initFaq();
 initLightbox();
