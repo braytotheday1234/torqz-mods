@@ -1,0 +1,13 @@
+{
+  "name": "torqz-mods-site-qa",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Browser verification only. The published static site has no npm runtime dependencies.",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "screenshots": "node tests/capture.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}

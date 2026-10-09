@@ -1,0 +1,42 @@
+name: V3 Browser and Visual QA
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout approved V2 for visual comparison
+        uses: actions/checkout@v4
+        with:
+          ref: pre-v3-themes-support-features
+          path: _before
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Start local current and previous websites
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/torqz-v3.log 2>&1 &
+          (cd _before && python3 -m http.server 8766 --bind 127.0.0.1 >/tmp/torqz-v2.log 2>&1) &
+          sleep 2
+      - name: Test website interactions
+        run: npm run test:e2e
+      - name: Capture before and after screenshots
+        if: always()
+        run: npm run screenshots
+      - name: Upload screenshots and test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: torqz-v3-browser-review
+          path: |
+            screenshots/
+            test-results/
+          if-no-files-found: warn
